@@ -84,6 +84,29 @@ nothing extra to wire up. `app/not-found.tsx` renders a themed 404.
    live in `/public/samples`. `hero.jpg` and `artist.jpg` ship as placeholders —
    replace them with real studio photos.
 
+## Запуск локально (Rider / VS Code)
+
+Нужен **Node.js 18.18+** (лучше 20 LTS) — https://nodejs.org.
+
+**Способ 1 — двойной клик (Windows):**
+
+- `start-local.bat` — создаёт `.env.local`, ставит зависимости (один раз),
+  поднимает dev-сервер с hot-reload и открывает `http://localhost:3000`.
+- `preview-prod.bat` — то же, но через прод-сборку (`build` + `start`) —
+  ровно то, что уедет на Vercel.
+
+**Способ 2 — Rider:** в файле `.run/` уже лежат готовые конфигурации запуска —
+после открытия папки они появятся в выпадашке Run/Debug справа вверху:
+
+- **dev (localhost:3000)** — разработка, hot-reload.
+- **build (prod)** → затем **start (serve prod build)** — прод-предпросмотр.
+
+Нажмите ▶ рядом с `dev` и откройте `http://localhost:3000`.
+
+> Без `.env.local` с ключами Supabase приложение упадёт на старте
+> (в `lib/supabaseClient.ts` стоит проверка переменных). `.bat`-скрипты создают
+> файл из примера автоматически — останется вписать ключи.
+
 ## Theme
 
 All colors and fonts live in `app/globals.css` under `@theme`. Change a value
