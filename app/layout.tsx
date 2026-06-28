@@ -1,10 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Bebas_Neue,
-  M_PLUS_Code_Latin,
-  Big_Shoulders_Display,
-  Manrope,
-} from "next/font/google";
+import { Bebas_Neue, Big_Shoulders_Display, Manrope } from "next/font/google";
 import "./globals.css";
 
 const bebas = Bebas_Neue({
@@ -12,19 +7,16 @@ const bebas = Bebas_Neue({
   subsets: ["latin"],
   variable: "--font-bebas",
 });
-const mplus = M_PLUS_Code_Latin({
-  weight: ["400", "500"],
-  subsets: ["latin"],
-  variable: "--font-mplus",
-});
+
 const bigShoulders = Big_Shoulders_Display({
   weight: "800",
   subsets: ["latin"],
   variable: "--font-big-shoulders",
 });
+
 const manrope = Manrope({
   weight: ["400", "500", "600"],
-  subsets: ["latin"],
+  subsets: ["latin", "cyrillic"],
   variable: "--font-manrope",
 });
 
