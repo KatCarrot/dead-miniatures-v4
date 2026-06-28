@@ -1,7 +1,13 @@
 # Dead Miniatures — Next.js + Supabase
 
-Production code for the three routes. Drop these files into your Next.js (App
-Router, Tailwind v4) project on Vercel.
+A complete, runnable Next.js (App Router, Tailwind v4) app for the three routes.
+Clone, `npm install`, add Supabase env vars, and deploy to Vercel.
+
+```bash
+npm install
+cp .env.local.example .env.local   # fill in Supabase URL + anon key
+npm run dev                         # http://localhost:3000
+```
 
 ## Routes
 
@@ -40,15 +46,24 @@ config/
 types/
   artwork.ts             Artwork type + Category union
 sql/
-  policies.sql           RLS read policy
+  setup.sql              full DB setup: tables + seed (4 pieces) + RLS — run once
+  policies.sql           RLS read policy on its own (if tables already exist)
+public/
+  logo.png               header logo
+  hero.jpg / artist.jpg  brand shots (PLACEHOLDERS — swap for real photos)
+  samples/mini-*.png     seed artwork images (referenced by sql/setup.sql)
 ```
+
+Project config (`package.json`, `tsconfig.json` with the `@/*` alias,
+`eslint.config.mjs`, `next.config.ts`, `postcss.config.mjs`) is all included —
+nothing extra to wire up. `app/not-found.tsx` renders a themed 404.
 
 ## Setup
 
 1. **Install deps**
 
    ```bash
-   npm install @supabase/supabase-js
+   npm install
    ```
 
 2. **Env** — copy `.env.local.example` → `.env.local` and fill in:
@@ -60,19 +75,14 @@ sql/
 
    Add the same two vars in Vercel → Project → Settings → Environment Variables.
 
-3. **Path alias** — these files import via `@/…`. Ensure `tsconfig.json` has:
+3. **Database** — run `sql/setup.sql` in the Supabase SQL editor. It creates the
+   `categories` + `artworks` tables, seeds 4 demo pieces, and enables public
+   read-only RLS. (Use `sql/policies.sql` alone if your tables already exist.)
 
-   ```json
-   { "compilerOptions": { "baseUrl": ".", "paths": { "@/*": ["./*"] } } }
-   ```
-
-   (If your code lives under `src/`, move these folders there and use `["./src/*"]`.)
-
-4. **RLS** — run `sql/policies.sql` in the Supabase SQL editor (public read-only).
-
-5. **Images** — `next.config.ts` allows `*.supabase.co/storage/...`. Tighten the
-   host to your project ref. Brand images (`/public/logo.png`, `/public/hero.jpg`,
-   `/public/artist.jpg`) are static — add your own.
+4. **Images** — `next.config.ts` allows `*.supabase.co/storage/...` for
+   `next/image`; tighten the host to your project ref in production. Seed images
+   live in `/public/samples`. `hero.jpg` and `artist.jpg` ship as placeholders —
+   replace them with real studio photos.
 
 ## Theme
 

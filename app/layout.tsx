@@ -1,12 +1,36 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Bebas_Neue, Anton, M_PLUS_Code_Latin, Manrope } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin", "cyrillic"] });
+// All four are stable, correctly-named Google fonts (no Big Shoulders — Google
+// renamed it, which broke next/font). Anton gives the heavy hero line.
+const bebas = Bebas_Neue({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-bebas",
+  display: "swap",
+});
+const anton = Anton({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-anton",
+  display: "swap",
+});
+const mplus = M_PLUS_Code_Latin({
+  weight: ["400", "500"],
+  subsets: ["latin"],
+  variable: "--font-mplus",
+  display: "swap",
+});
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Dead Miniatures — Студия покраса миниатюр",
-  description: "Ручной покрас миниатюр на заказ",
+  title: "Dead Miniatures",
+  description: "Hand-painted miniatures studio. Nothing here is mass-made.",
 };
 
 export default function RootLayout({
@@ -15,8 +39,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru">
-      <body className={`${inter.className} bg-zinc-950 text-zinc-50 antialiased`}>
+    <html
+      lang="en"
+      className={`${bebas.variable} ${anton.variable} ${mplus.variable} ${manrope.variable}`}
+    >
+      <body className="min-h-screen bg-bg font-mono text-cream antialiased">
         {children}
       </body>
     </html>
