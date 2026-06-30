@@ -1,0 +1,933 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+const SHOWCASE_CATS = [
+  "SINGLE",
+  "SQUAD",
+  "VEHICLE",
+  "DIORAMA",
+  "BUSTS",
+  "SMALL SCALE",
+] as const;
+type ShowcaseCat = (typeof SHOWCASE_CATS)[number];
+
+const LABELS: Record<ShowcaseCat, string> = {
+  SINGLE: "Single",
+  SQUAD: "Squad",
+  VEHICLE: "Vehicle",
+  DIORAMA: "Diorama",
+  BUSTS: "Busts",
+  "SMALL SCALE": "Small Scale",
+};
+const COUNTS: Record<ShowcaseCat, number> = {
+  SINGLE: 23,
+  SQUAD: 3,
+  VEHICLE: 12,
+  DIORAMA: 6,
+  BUSTS: 4,
+  "SMALL SCALE": 12,
+};
+const IMAGES: Record<ShowcaseCat, [string, string]> = {
+  SINGLE: ["/samples/showcase-1.png", "/samples/showcase-2.png"],
+  SQUAD: ["/samples/mini-1.png", "/samples/mini-2.png"],
+  VEHICLE: ["/samples/mini-3.png", "/samples/vehicle.png"],
+  DIORAMA: ["/samples/mini-2.png", "/samples/mini-3.png"],
+  BUSTS: ["/samples/mini-1.png", "/samples/showcase-1.png"],
+  "SMALL SCALE": ["/samples/showcase-2.png", "/samples/mini-4.png"],
+};
+
+export default function HomeView() {
+  const [mobile, setMobile] = useState(false);
+  const [ppCat, setPpCat] = useState<ShowcaseCat>("SINGLE");
+  const [ppHover, setPpHover] = useState<ShowcaseCat | null>(null);
+  const [emailVal, setEmailVal] = useState("");
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 900px)");
+    const onMQ = () => setMobile(mq.matches);
+    onMQ();
+    mq.addEventListener("change", onMQ);
+
+    // scroll to hash on load (#about / #contacts), accounting for sticky header
+    if (window.location.hash) {
+      const id = window.location.hash.slice(1);
+      let attempts = 0;
+      const tryScroll = () => {
+        const el = document.getElementById(id);
+        if (el) {
+          const header = document.querySelector("header");
+          const offset = header ? (header as HTMLElement).offsetHeight : 80;
+          window.scrollTo({
+            top: el.getBoundingClientRect().top + window.scrollY - offset,
+            behavior: "smooth",
+          });
+        } else if (attempts++ < 15) {
+          setTimeout(tryScroll, 100);
+        }
+      };
+      setTimeout(tryScroll, 100);
+    }
+    return () => mq.removeEventListener("change", onMQ);
+  }, []);
+
+  const m = mobile;
+  const cat = ppCat;
+  const litCat = ppHover || cat;
+  const [img1, img2] = IMAGES[litCat];
+  const sendDisabled = !emailVal.trim();
+
+  return (
+    <>
+      {/* ===== HERO ===== */}
+      <section
+        style={{
+          position: "relative",
+          zIndex: 1,
+          minHeight: m ? 660 : 900,
+          marginTop: m ? 0 : -128,
+          paddingTop: m ? 0 : 128,
+          backgroundImage: "url('/brand/hero-bg-opt.png')",
+          backgroundSize: "cover",
+          width: "100%",
+          backgroundPosition: "top center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div
+          style={
+            m
+              ? {
+                  position: "absolute",
+                  left: "50%",
+                  top: 70,
+                  transform: "translateX(-50%)",
+                  width: "130%",
+                  maxWidth: 760,
+                  aspectRatio: "2115/1791",
+                  backgroundImage: "url('/brand/hero-logo-bg-opt.png')",
+                  backgroundSize: "contain",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
+                  pointerEvents: "none",
+                }
+              : {
+                  position: "absolute",
+                  left: -40,
+                  top: -210,
+                  width: 998,
+                  height: 832,
+                  backgroundImage: "url('/brand/hero-logo-bg-opt.png')",
+                  backgroundSize: "contain",
+                  backgroundPosition: "left top",
+                  backgroundRepeat: "no-repeat",
+                  pointerEvents: "none",
+                }
+          }
+        />
+        <div
+          style={
+            m
+              ? {
+                  position: "absolute",
+                  right: 0,
+                  bottom: 0,
+                  width: "80%",
+                  backgroundImage: "url('/samples/hero-fig-opt.png')",
+                  backgroundSize: "contain",
+                  backgroundPosition: "right bottom",
+                  backgroundRepeat: "no-repeat",
+                  aspectRatio: "1 / 1",
+                  zIndex: 3,
+                  pointerEvents: "none",
+                }
+              : {
+                  position: "absolute",
+                  right: 0,
+                  bottom: 0,
+                  width: 860,
+                  height: 793,
+                  backgroundImage: "url('/samples/hero-fig-opt.png')",
+                  backgroundSize: "contain",
+                  backgroundPosition: "right bottom",
+                  backgroundRepeat: "no-repeat",
+                  zIndex: 3,
+                  pointerEvents: "none",
+                }
+          }
+        />
+        <div
+          style={{
+            position: m ? "relative" : "absolute",
+            zIndex: 1,
+            left: m ? "auto" : "clamp(20px,6vw,145px)",
+            bottom: m ? "auto" : 80,
+            maxWidth: 620,
+            padding: m ? "150px clamp(20px,6vw,40px) 80px" : 0,
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              lineHeight: 1.0,
+              color: "var(--text)",
+              fontFamily: "var(--font-anton)",
+              fontWeight: 400,
+              textTransform: "uppercase",
+            }}
+          >
+            <span style={{ display: "block", fontSize: "clamp(78px,12vw,144px)" }}>
+              I Paint
+            </span>
+            <span style={{ display: "block", fontSize: "clamp(78px,12vw,144px)" }}>
+              Miniatures
+            </span>
+          </h1>
+          <div
+            style={{
+              marginTop: 18,
+              fontFamily: "var(--font-manrope)",
+              fontSize: "clamp(16px,1.5vw,20px)",
+              lineHeight: 1.45,
+              color: "var(--text)",
+            }}
+          >
+            <div>
+              You&rsquo;re in <strong style={{ fontWeight: 600 }}>Dead miniatures</strong>{" "}
+              studio.
+            </div>
+            <div>Minis for your shelves &amp; tables.</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SHOWCASE ===== */}
+      <section
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          padding: "180px clamp(20px,6vw,112px) 180px",
+          background: "var(--bg)",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: "url('/brand/scratch-tex-showcase.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.18,
+            mixBlendMode: "color-dodge",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            marginBottom: 48,
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: "var(--font-anton)",
+              fontWeight: 400,
+              fontSize: "clamp(56px,8vw,96px)",
+              lineHeight: 1,
+              color: "var(--text)",
+              margin: 0,
+              textTransform: "uppercase",
+            }}
+          >
+            Showcase
+          </h2>
+          <p
+            style={{
+              fontFamily: "var(--font-sf)",
+              fontSize: 16,
+              lineHeight: 1.2,
+              color: "var(--text-dim)",
+              margin: 0,
+            }}
+          >
+            Every detail is intentional. Nothing is left to chance.
+          </p>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: m ? "column" : "row",
+            gap: m ? 0 : 60,
+            alignItems: m ? "stretch" : "flex-start",
+            justifyContent: "flex-start",
+          }}
+        >
+          {/* vertical tab list */}
+          <div
+            style={{
+              width: m ? "100%" : 434,
+              flexShrink: 0,
+              height: m ? "auto" : 566,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {SHOWCASE_CATS.map((k) => {
+              const isActive = k === cat;
+              const isHovered = k === ppHover;
+              const isLit = ppHover ? isHovered : isActive;
+              return (
+                <div
+                  key={k}
+                  onMouseEnter={() => setPpHover(k)}
+                  onMouseLeave={() => {
+                    setPpCat(k);
+                    setPpHover(null);
+                  }}
+                  onClick={() => {
+                    window.location.href = "/showcase#" + k;
+                  }}
+                  style={{
+                    cursor: "pointer",
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flex: 1,
+                      width: "100%",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "var(--font-sf)",
+                        fontSize: "clamp(20px,2.2vw,32px)",
+                        color: isLit ? "var(--accent)" : "var(--text)",
+                        padding: "5px 0",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {LABELS[k].toUpperCase()}
+                      <span style={{ opacity: 0.4 }}> / {COUNTS[k]}</span>
+                    </span>
+                    {isLit && (
+                      <span
+                        style={{
+                          fontFamily: "var(--font-sf)",
+                          fontSize: 13,
+                          color: "var(--accent)",
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        View All
+                      </span>
+                    )}
+                  </div>
+                  {isActive && m && (
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: 8,
+                        padding: "4px 0 16px",
+                      }}
+                    >
+                      <div style={mobileImg(IMAGES[k][0])} />
+                      <div style={mobileImg(IMAGES[k][1])} />
+                    </div>
+                  )}
+                  <div style={{ height: 1, background: "var(--line)" }} />
+                </div>
+              );
+            })}
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-start",
+                marginTop: m ? 32 : 48,
+              }}
+            >
+              <Link
+                href="/showcase"
+                className="btn-outline"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 171,
+                  height: 40,
+                  boxShadow: "inset 0 0 0 1px var(--accent)",
+                  color: "var(--accent)",
+                  fontFamily: "var(--font-mono)",
+                  fontWeight: 500,
+                  fontSize: 16,
+                  textDecoration: "none",
+                  textTransform: "uppercase",
+                }}
+              >
+                View All Work
+              </Link>
+            </div>
+          </div>
+
+          {/* right: overlapping rotated photos (desktop) */}
+          {!m && (
+            <div
+              style={{
+                position: "relative",
+                width: 700,
+                minHeight: 606,
+                flexShrink: 0,
+                pointerEvents: "none",
+              }}
+            >
+              <div style={bigImg(img1, 60, 0, 401, 566)} />
+              <div style={bigImg(img2, 488, 244, 255, 362)} />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ===== QUOTE / VIDEO ===== */}
+      <section
+        id="about"
+        style={{
+          position: "relative",
+          zIndex: 1,
+          overflow: "hidden",
+          padding: m
+            ? "60px clamp(20px,6vw,40px) 80px"
+            : "80px clamp(20px,6vw,112px)",
+          isolation: "isolate",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "url('/brand/quote-bg-opt.png') center/cover no-repeat",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+        <div
+          style={{
+            position: "relative",
+            zIndex: 2,
+            width: "100%",
+            maxWidth: 1416,
+            margin: "0 auto",
+            height: "clamp(540px,50vw,720px)",
+          }}
+        >
+          <h2
+            style={{
+              position: "absolute",
+              top: "clamp(26px,4.8vw,62px)",
+              left: "calc(26% - 1.5em)",
+              fontFamily: "var(--font-anton)",
+              fontWeight: 400,
+              fontSize: "clamp(60px,10vw,130px)",
+              lineHeight: 1,
+              color: "var(--text)",
+              margin: 0,
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+            }}
+          >
+            No shortcuts.
+          </h2>
+
+          <div
+            style={{
+              position: "absolute",
+              left: "26%",
+              top: "calc(clamp(60px,10vw,130px) + 10px + clamp(26px,4.8vw,62px))",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 28,
+            }}
+          >
+            <div
+              style={{
+                position: "relative",
+                width: "clamp(280px,31vw,480px)",
+                aspectRatio: "339/219",
+                overflow: "hidden",
+                background: "url('/samples/video-thumb.png') center/cover no-repeat",
+                backgroundColor: "var(--card)",
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "rgba(0,0,0,0.4)",
+                  mixBlendMode: "color",
+                  pointerEvents: "none",
+                }}
+              />
+              <button
+                aria-label="Play"
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%,-50%)",
+                  width: 110,
+                  height: 110,
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 0,
+                  zIndex: 1,
+                }}
+              >
+                <span
+                  style={{
+                    display: "block",
+                    width: 0,
+                    height: 0,
+                    borderLeft: "33px solid var(--accent)",
+                    borderTop: "22px solid transparent",
+                    borderBottom: "22px solid transparent",
+                    marginLeft: 7,
+                  }}
+                />
+              </button>
+            </div>
+            <div
+              style={{
+                position: "relative",
+                zIndex: 1,
+                fontFamily: "var(--font-mono)",
+                fontSize: 16,
+                lineHeight: 1.7,
+                color: "var(--accent)",
+                whiteSpace: "nowrap",
+                marginTop: 10,
+                marginLeft: -50,
+              }}
+            >
+              / Kisa
+              <br />/ Miniature artist
+            </div>
+          </div>
+
+          <span
+            style={{
+              position: "absolute",
+              right:
+                "calc(74% - clamp(280px,31vw,480px) + 2px)",
+              top: "calc(clamp(60px,10vw,130px) + 20px + clamp(181px,20vw,310px) + clamp(26px,4.8vw,62px))",
+              fontFamily: "var(--font-sf)",
+              fontWeight: 400,
+              fontSize: "clamp(28px,4vw,54px)",
+              color: "var(--text)",
+              textTransform: "uppercase",
+              lineHeight: 1,
+            }}
+          >
+            Just
+          </span>
+          <span
+            style={{
+              position: "absolute",
+              left: "calc(26% + clamp(280px,31vw,480px) + 10px)",
+              top: "calc(clamp(60px,10vw,130px) + 20px + clamp(181px,20vw,310px))",
+              fontFamily: "var(--font-anton)",
+              fontWeight: 400,
+              fontSize: "clamp(60px,10vw,130px)",
+              color: "var(--text)",
+              lineHeight: 1,
+              textTransform: "uppercase",
+            }}
+          >
+            Paint.
+          </span>
+        </div>
+      </section>
+
+      {/* ===== CONTACTS + FOOTER TEXTURE WRAPPER ===== */}
+      <div style={{ position: "relative" }}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: "url('/brand/scratch-tex-contact-new.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.18,
+            mixBlendMode: "color-dodge",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+
+        <section
+          id="contacts"
+          style={{
+            position: "relative",
+            zIndex: 1,
+            maxWidth: 1416,
+            margin: "0 auto",
+            padding: "180px clamp(20px,6vw,112px)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: m ? "column" : "row",
+              gap: m ? 16 : 0,
+              alignItems: "stretch",
+            }}
+          >
+            {/* form card */}
+            <form
+              onSubmit={(e) => e.preventDefault()}
+              style={{
+                position: "relative",
+                width: m ? "100%" : 501,
+                flexShrink: 0,
+                background: "var(--card)",
+                boxShadow: "inset 0 0 0 1px rgba(28,30,31,1)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 32,
+                padding: 40,
+                justifyContent: "center",
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <h3
+                  style={{
+                    fontFamily: "var(--font-anton)",
+                    fontWeight: 400,
+                    fontSize: "clamp(40px,4vw,54px)",
+                    lineHeight: 1.1,
+                    color: "var(--accent)",
+                    margin: 0,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Have something special in mind?
+                </h3>
+                <p
+                  style={{
+                    fontFamily: "var(--font-sf)",
+                    fontSize: 16,
+                    lineHeight: 1,
+                    color: "var(--text-dim)",
+                    margin: 0,
+                  }}
+                >
+                  Open to custom projects and collaborations
+                </p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 12 }}
+                >
+                  <input
+                    type="email"
+                    required
+                    placeholder="E-mail"
+                    onChange={(e) => setEmailVal(e.target.value)}
+                    style={{
+                      height: 50,
+                      background: "var(--inset)",
+                      border: "none",
+                      padding: "15px 16px",
+                      fontFamily: "var(--font-sf)",
+                      fontSize: 16,
+                      color: "var(--text)",
+                      outline: "none",
+                    }}
+                  />
+                  <textarea
+                    placeholder="Tell about your project"
+                    rows={3}
+                    style={{
+                      height: 83,
+                      resize: "none",
+                      background: "var(--inset)",
+                      border: "none",
+                      padding: "15px 16px",
+                      fontFamily: "var(--font-sf)",
+                      fontSize: 16,
+                      color: "var(--text)",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="btn-outline"
+                  disabled={sendDisabled}
+                  style={{
+                    width: 171,
+                    height: 40,
+                    boxShadow: "inset 0 0 0 1px var(--accent)",
+                    background: "transparent",
+                    color: "var(--accent)",
+                    fontFamily: "var(--font-mono)",
+                    fontWeight: 500,
+                    fontSize: 16,
+                    cursor: "pointer",
+                    textTransform: "uppercase",
+                    transition: "opacity 0.2s",
+                  }}
+                >
+                  Send
+                </button>
+              </div>
+            </form>
+
+            {/* visual card */}
+            <div
+              style={{
+                position: "relative",
+                overflow: "hidden",
+                width: m ? "100%" : 310,
+                minHeight: m ? 320 : "auto",
+                flexShrink: 0,
+                background: "var(--card)",
+                boxShadow: "inset 0 0 0 1px rgba(28,30,31,1)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                gap: 24,
+                padding: 40,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: -24,
+                  background:
+                    "url('/brand/logo-content-bg.png') center/contain no-repeat",
+                  opacity: 0.9,
+                  pointerEvents: "none",
+                  zIndex: 0,
+                }}
+              />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-sf)",
+                    fontSize: 20,
+                    fontWeight: 400,
+                    color: "var(--text)",
+                    textTransform: "uppercase",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  From
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-bebas)",
+                    fontWeight: 400,
+                    fontSize: 40,
+                    lineHeight: "40px",
+                    color: "var(--text)",
+                  }}
+                >
+                  single pieces
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-bebas)",
+                    fontWeight: 400,
+                    fontSize: 40,
+                    lineHeight: "40px",
+                    color: "var(--text)",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: "var(--font-sf)",
+                      fontSize: 20,
+                      fontWeight: 400,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    to
+                  </span>{" "}
+                  full compositions
+                </div>
+              </div>
+              <div
+                style={{
+                  position: "relative",
+                  zIndex: 1,
+                  fontFamily: "var(--font-sf)",
+                  fontSize: 16,
+                  lineHeight: 1.38,
+                  color: "var(--text)",
+                  maxWidth: 160,
+                }}
+              >
+                Everything is discussed upfront.
+              </div>
+            </div>
+
+            {/* contact cards */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                width: m ? "100%" : 380,
+                flexShrink: 0,
+              }}
+            >
+              <div style={contactCard}>
+                <span style={contactKicker}>/ WRITE DIRECTLY</span>
+                <a
+                  href="mailto:deadminiatures@gmail.com"
+                  style={{
+                    fontFamily: "var(--font-sf)",
+                    fontSize: 16,
+                    color: "var(--text)",
+                    textDecoration: "none",
+                    cursor: "default",
+                  }}
+                >
+                  deadminiatures@gmail.com
+                </a>
+                <div style={contactIcon("/icons/mail.svg", -8)} className="contact-icon" />
+              </div>
+              <a
+                href="https://www.instagram.com/deadminiatures/"
+                target="_blank"
+                rel="noopener"
+                className="contact-link"
+                style={{ ...contactCard, textDecoration: "none", cursor: "pointer" }}
+              >
+                <span style={contactKicker}>/ INSTAGRAM</span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-sf)",
+                    fontSize: 16,
+                    color: "var(--text)",
+                  }}
+                >
+                  Finished works &amp; DM
+                </span>
+                <div
+                  style={contactIcon("/icons/instagram.svg", -6)}
+                  className="contact-icon"
+                />
+              </a>
+              <a
+                href="https://www.youtube.com/@deadminiatures"
+                target="_blank"
+                rel="noopener"
+                className="contact-link"
+                style={{ ...contactCard, textDecoration: "none", cursor: "pointer" }}
+              >
+                <span style={contactKicker}>/ YOUTUBE</span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-sf)",
+                    fontSize: 16,
+                    color: "var(--text)",
+                  }}
+                >
+                  Painting process &amp; studio videos
+                </span>
+                <div
+                  style={contactIcon("/icons/youtube.svg", -6)}
+                  className="contact-icon"
+                />
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}
+
+function mobileImg(src: string): React.CSSProperties {
+  return {
+    aspectRatio: "3/4",
+    backgroundImage: `url('${src}')`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundColor: "var(--card)",
+  };
+}
+
+function bigImg(
+  src: string,
+  left: number,
+  top: number,
+  width: number,
+  height: number
+): React.CSSProperties {
+  return {
+    position: "absolute",
+    left,
+    top,
+    width,
+    height,
+    backgroundImage: `url('${src}')`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+    backgroundColor: "var(--card)",
+  };
+}
+
+const contactCard: React.CSSProperties = {
+  position: "relative",
+  overflow: "hidden",
+  background: "var(--card)",
+  boxShadow: "inset 0 0 0 1px rgba(28,30,31,1)",
+  display: "flex",
+  flexDirection: "column",
+  gap: 16,
+  padding: "16px 20px",
+  justifyContent: "center",
+  flex: 1,
+};
+
+const contactKicker: React.CSSProperties = {
+  fontFamily: "var(--font-mono)",
+  fontSize: 16,
+  color: "var(--accent)",
+};
+
+function contactIcon(src: string, right: number): React.CSSProperties {
+  return {
+    position: "absolute",
+    right,
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: 105,
+    height: 105,
+    backgroundColor: "rgb(30,30,30)",
+    WebkitMask: `url('${src}') no-repeat center/contain`,
+    mask: `url('${src}') no-repeat center/contain`,
+  };
+}

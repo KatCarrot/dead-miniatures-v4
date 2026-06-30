@@ -1,36 +1,144 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   THEME — single source of truth (Tailwind v4, no tailwind.config needed).
-   Edit a value here and it updates everywhere via utilities like
-   bg-bg / text-cream / text-accent / border-accent / font-display.
+   THEME — Tailwind v4 tokens (kept for utility classes on <body> etc.)
    ============================================================================ */
 @theme {
-  /* colors */
-  --color-bg: #192022;        /* page background */
-  --color-deep: #070707;      /* deepest panels / image wells */
-  --color-menu: #080808;      /* header dropdown */
-  --color-cream: #eee9db;     /* primary text */
-  --color-dim: #707070;       /* muted text / sold */
-  --color-accent: #1fe0c5;    /* interactive accent */
-  --color-available: #197a48; /* status: available */
-  --color-sold: #707070;      /* status: sold */
-  --color-video: #40ddff;     /* play button */
+  --color-bg: #1c1e1f;
+  --color-deep: #0b0a0a;
+  --color-menu: #0b0a0a;
+  --color-cream: #eee9db;
+  --color-dim: #707070;
+  --color-accent: #1fe0c5;
+  --color-available: #197a48;
+  --color-sold: #707070;
+  --color-video: #40ddff;
 
-  /* fonts (wired to next/font CSS variables from layout.tsx) */
-  --font-display: var(--font-bebas), Impact, sans-serif;
-  --font-display2: var(--font-anton), Impact, sans-serif;
-  --font-mono: var(--font-mplus), ui-monospace, "SF Mono", Menlo, monospace;
-  --font-body: var(--font-manrope), system-ui, sans-serif;
+  --font-display: var(--font-bebas-nf), Impact, sans-serif;
+  --font-display2: var(--font-anton-nf), Impact, sans-serif;
+  --font-mono: var(--font-mplus-nf), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-body: var(--font-manrope-nf), system-ui, sans-serif;
+}
+
+/* ============================================================================
+   DESIGN TOKENS — consumed directly by the ported components (inline styles
+   reference these var() names verbatim from the original design).
+   ============================================================================ */
+:root {
+  --bg: #1c1e1f;
+  --card: #0b0a0a;
+  --bg-deep: #0b0a0a;
+  --text: #eee9db;
+  --text-dim: rgba(238, 233, 219, 0.6);
+  --meta-label: rgba(255, 255, 255, 0.6);
+  --accent: #1fe0c5;
+  --video: #40ddff;
+  --available: #197a48;
+  --sold: #717171;
+  --line: rgba(255, 255, 255, 0.2);
+  --foot-line: #3c4043;
+  --inset: rgba(28, 30, 31, 0.6);
+
+  /* Font stacks — Anton / Bebas / M PLUS / Manrope come from next/font
+     (set on <html> in layout.tsx). These compose the remaining aliases. */
+  --font-anton: var(--font-anton-nf), "Anton", Impact, sans-serif;
+  --font-bebas: var(--font-bebas-nf), "Bebas Neue", Impact, sans-serif;
+  --font-display: var(--font-bebas-nf), "Bebas Neue", Impact, sans-serif;
+  --font-mono: var(--font-mplus-nf), "M PLUS Code Latin", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-manrope: var(--font-manrope-nf), "Manrope", system-ui, sans-serif;
+  --font-sf: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 html,
 body {
-  background: var(--color-bg);
-  color: var(--color-cream);
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  scroll-behavior: smooth;
 }
 
 ::selection {
-  background: var(--color-accent);
-  color: var(--color-deep);
+  background: var(--accent);
+  color: #0b0a0a;
+}
+
+/* ============================================================================
+   HOVER / INTERACTION HELPERS (cannot be expressed as inline styles)
+   ============================================================================ */
+.nav-link:hover,
+.nav-link-open {
+  color: #1fe0c5 !important;
+}
+.nav-link:hover span,
+.nav-link-open span {
+  border-color: #1fe0c5 !important;
+}
+.btn-text-link:hover {
+  text-decoration: underline !important;
+  text-underline-offset: 4px;
+}
+.btn-outline:hover {
+  background: #1fe0c5 !important;
+  color: #1c1e1f !important;
+}
+.btn-outline:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+  background: transparent !important;
+  color: var(--accent) !important;
+}
+.contact-link:hover .contact-icon {
+  background-color: #1fe0c5 !important;
+}
+.contact-link:hover span:first-child {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+/* showcase + gallery */
+.tab-btn:hover {
+  color: #1fe0c5 !important;
+}
+.gallery-card:hover .card-arrows {
+  opacity: 1;
+}
+
+/* product detail */
+.back-link:hover {
+  color: #eee9db !important;
+}
+.back-link:hover .back-text {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.prev-next-link:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+.media-thumb:hover {
+  opacity: 1 !important;
+}
+.media-arrow:hover {
+  background: rgba(5, 5, 5, 0.75) !important;
+}
+.lb-ctrl:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+.thumbs-col::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thumbs-col::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+@media (max-width: 900px) {
+  .deco-figure {
+    display: none !important;
+  }
 }

@@ -13,9 +13,9 @@ npm run dev                         # http://localhost:3000
 
 | Route            | File                          | Notes                                                        |
 | ---------------- | ----------------------------- | ------------------------------------------------------------ |
-| `/`              | `app/page.tsx`                | Landing. Server-fetches latest 6; tabs filter **client-side**. |
-| `/showcase`      | `app/showcase/page.tsx`       | Gallery. Category from `?category=` filtered **server-side**. |
-| `/artwork/[id]`  | `app/artwork/[id]/page.tsx`   | Product. Image switcher, meta, description.                  |
+| `/`              | `app/page.tsx`                | Landing: hero, showcase tabs, quote/video, contacts.         |
+| `/showcase`      | `app/showcase/page.tsx`       | Gallery. Client-fetches `artworks`; category tabs + deco art. |
+| `/artwork/[id]`  | `app/artwork/[id]/page.tsx`   | Product. Media viewer, thumbnails, lightbox, prev/next.      |
 
 Logo + "Home" → `/`. Header **MINIATURES** → `/showcase`.
 
@@ -23,35 +23,32 @@ Logo + "Home" → `/`. Header **MINIATURES** → `/showcase`.
 
 ```
 app/
-  globals.css            theme tokens (Tailwind v4 @theme) — EDIT COLORS HERE
+  globals.css            theme tokens + design vars + hover helpers
   layout.tsx             fonts (next/font) + root html/body
   page.tsx               /
   showcase/page.tsx      /showcase
   artwork/[id]/page.tsx  /artwork/[id]
+  not-found.tsx          themed 404
 components/
-  TopNav.tsx             responsive nav (burger + MINIATURES dropdown)
-  Hero.tsx               landing hero
-  PaintedPiecesPreview.tsx  landing tabs (client-side filter) + View All Work
-  AboutArtist.tsx        about block
-  CategoryFilter.tsx     showcase tabs (URL links)
-  ArtworkCard.tsx        gallery card
-  ProductGallery.tsx     main image + thumbnail switcher
-  StatusBadge.tsx        available / sold
+  SiteHeader.tsx         responsive nav (burger + MINIATURES dropdown)
+  SiteFooter.tsx         footer bar
+  HomeView.tsx           landing body: hero, showcase, quote, contacts
+  GalleryView.tsx        showcase grid: tabs, deco figure, card carousels
+  ProductView.tsx        product detail: media viewer, lightbox, prev/next
 lib/
   supabaseClient.ts      anon read client
   queries.ts             getLatestArtworks / getArtworks / getArtwork
-  images.ts              [image_url, ...extra_images] -> dedupe
 config/
   categories.ts          category keys + labels (single source)
 types/
   artwork.ts             Artwork type + Category union
 sql/
-  setup.sql              full DB setup: tables + seed (4 pieces) + RLS — run once
+  setup.sql              full DB setup: tables + seed + RLS — run once
   policies.sql           RLS read policy on its own (if tables already exist)
 public/
-  logo.png               header logo
-  hero.jpg / artist.jpg  brand shots (PLACEHOLDERS — swap for real photos)
-  samples/mini-*.png     seed artwork images (referenced by sql/setup.sql)
+  brand/                 logo, hero/quote backgrounds, scratch textures
+  icons/                 mail / instagram / youtube glyphs
+  samples/               seed + deco artwork images
 ```
 
 Project config (`package.json`, `tsconfig.json` with the `@/*` alias,
@@ -117,7 +114,8 @@ there and it propagates through every component (utilities `bg-bg`, `text-cream`
 
 - **Categories** — exact UPPERCASE match against the DB; `ALL` = no filter.
   Edit order/labels in `config/categories.ts` only.
-- **Images** — `collectImages()` builds `[image_url, ...extra_images]`, drops
-  empties, dedupes. Index 0 is the cover / default main image.
-- **Latest preview** — `getLatestArtworks(6)` → `order('id', { ascending: false })`
-  `.limit(6)`; landing tabs filter this set in the browser.
+- **Images** — stored paths are normalised (`public/x` → `/x`); index 0 is the
+  cover. The gallery + product viewer build their image lists from
+  `image_url` + `extra_images`.
+- **Gallery** — `GalleryView` client-fetches the full `artworks` table and
+  filters by the active category tab in the browser.

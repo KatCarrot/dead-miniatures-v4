@@ -1,5 +1,5 @@
 import Link from "next/link";
-import TopNav from "@/components/TopNav";
+import SiteHeader from "@/components/SiteHeader";
 
 /**
  * Themed 404 — shown by the App Router when a route or `notFound()` resolves
@@ -8,7 +8,7 @@ import TopNav from "@/components/TopNav";
 export default function NotFound() {
   return (
     <main className="relative flex min-h-screen flex-col bg-bg font-mono text-cream">
-      <TopNav />
+      <SiteHeader variant="inner" />
 
       <div className="mx-auto flex w-full max-w-[1432px] flex-1 flex-col items-start justify-center px-5 py-24 sm:px-12 lg:px-[92px]">
         <p className="m-0 font-mono text-base font-medium uppercase tracking-wide text-accent">

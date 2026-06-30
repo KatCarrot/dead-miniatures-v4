@@ -1,22 +1,37 @@
-import TopNav from "@/components/TopNav";
-import Hero from "@/components/Hero";
-import PaintedPiecesPreview from "@/components/PaintedPiecesPreview";
-import AboutArtist from "@/components/AboutArtist";
-import { getLatestArtworks } from "@/lib/queries";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
+import HomeView from "@/components/HomeView";
 
 /**
  * Landing page — route "/".
- * Server-fetches the latest pieces; the preview tabs filter them client-side.
  */
-export default async function HomePage() {
-  const latest = await getLatestArtworks(6);
-
+export default function HomePage() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-bg font-mono text-cream">
-      <TopNav />
-      <Hero />
-      <PaintedPiecesPreview items={latest} />
-      <AboutArtist />
+    <main
+      style={{
+        position: "relative",
+        background: "var(--bg)",
+        color: "var(--text)",
+        fontFamily: "var(--font-sf)",
+      }}
+    >
+      {/* global scratch texture */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: "url('/brand/scratch-tex.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          opacity: 0.18,
+          mixBlendMode: "color-dodge",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+      <SiteHeader variant="home" />
+      <HomeView />
+      <SiteFooter />
     </main>
   );
 }
