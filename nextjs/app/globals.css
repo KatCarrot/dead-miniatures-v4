@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   THEME — single source of truth (Tailwind v4, no tailwind.config needed).
+   Edit a value here and it updates everywhere via utilities like
+   bg-bg / text-cream / text-accent / border-accent / font-display.
+   ============================================================================ */
+@theme {
+  /* colors */
+  --color-bg: #192022;        /* page background */
+  --color-deep: #070707;      /* deepest panels / image wells */
+  --color-menu: #080808;      /* header dropdown */
+  --color-cream: #eee9db;     /* primary text */
+  --color-dim: #707070;       /* muted text / sold */
+  --color-accent: #1fe0c5;    /* interactive accent */
+  --color-available: #197a48; /* status: available */
+  --color-sold: #707070;      /* status: sold */
+  --color-video: #40ddff;     /* play button */
+
+  /* fonts (wired to next/font CSS variables from layout.tsx) */
+  --font-display: var(--font-bebas), Impact, sans-serif;
+  --font-display2: var(--font-anton), Impact, sans-serif;
+  --font-mono: var(--font-mplus), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-body: var(--font-manrope), system-ui, sans-serif;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-cream);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-deep);
+}

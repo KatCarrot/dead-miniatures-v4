@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=M+PLUS+Code+Latin:wght@400;500&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="public/samples/all-xs.png">
+  <link rel="preload" as="image" href="public/samples/single-xs.png">
+  <link rel="preload" as="image" href="public/samples/vehicle-xs.png">
+  <link rel="preload" as="image" href="public/samples/busts-xs.png">
+  <link rel="preload" as="image" href="public/samples/small-scale-xs.png">
+  <style>
+    :root{
+      --bg: #1c1e1f;
+      --card: #0b0a0a;
+      --bg-deep: #0b0a0a;
+      --text: #eee9db;
+      --text-dim: rgba(238,233,219,0.6);
+      --accent: #1fe0c5;
+      --available: #197a48;
+      --sold: #717171;
+      --line: rgba(255,255,255,0.2);
+      --foot-line: #3c4043;
+      --font-anton: "Anton", Impact, sans-serif;
+      --font-bebas: "Bebas Neue", Impact, sans-serif;
+      --font-display: "Bebas Neue", Impact, sans-serif;
+      --font-mono: "M PLUS Code Latin", ui-monospace, "SF Mono", Menlo, monospace;
+      --font-sf: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-manrope: "Manrope", system-ui, sans-serif;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; background:var(--bg); scroll-behavior:smooth; }
+    /* preload all deco images */
+    ::selection{ background:var(--accent); color:#0b0a0a; }
+    .nav-link:hover, .nav-link-open { color: #1fe0c5 !important; }
+    .nav-link:hover span, .nav-link-open span { border-color: #1fe0c5 !important; }
+    .tab-btn:hover { color: #1fe0c5 !important; }
+    @media (max-width: 900px) { .deco-figure { display: none !important; } }
+    .gallery-card:hover .card-arrows { opacity: 1; }
+    .btn-text-link:hover { text-decoration: underline !important; text-underline-offset: 4px; }
+    .btn-outline:hover { background: #1fe0c5 !important; color: #1c1e1f !important; }
+  </style>
+</helmet>
+
+<div style="position:relative; min-height:100vh; background:var(--bg); color:var(--text); font-family:var(--font-mono); overflow-x:hidden;">
+
+  <!-- grunge overlay -->
+  <div style="{{ textureStyle }}"></div>
+
+  <!-- ===== STICKY HEADER ===== -->
+  <header style="position:sticky; top:0; z-index:50;">
+    <nav style="position:relative; z-index:6; display:flex; align-items:center; justify-content:space-between; padding:0 clamp(20px,6vw,112px); max-width:1432px; margin:0 auto; width:100%;">
+      <a href="Home.dc.html" style="display:flex; align-items:center; flex-shrink:0;">
+        <div style="width:230px; height:128px; background:url('public/brand/dead-logo.png') left center/contain no-repeat;"></div>
+      </a>
+
+      <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; align-items:center; gap:32px;">
+          <div style="position:relative; align-self:center; padding-bottom:28px; margin-bottom:-28px;" onMouseEnter="{{ navEnter }}" onMouseLeave="{{ navLeave }}">
+            <a href="Gallery.dc.html" class="{{ miniNavClass }}" style="display:flex; align-items:center; gap:6px; color:var(--text); text-decoration:none; font-size:14px; font-family:var(--font-sf); text-transform:uppercase; letter-spacing:0.04em;">Miniatures
+              <span style="display:inline-block; width:7px; height:7px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg) translateY(-2px);"></span>
+            </a>
+            <sc-if value="{{ navOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute; left:-20px; top:24px; min-width:200px; background:var(--card); padding:11px 20px; display:flex; flex-direction:column; z-index:9; border:1px solid rgba(60,64,67,0.6);">
+                <sc-for list="{{ catLinks }}" as="c" hint-placeholder-count="6">
+                  <a href="{{ c.href }}" class="nav-link" style="display:block; color:var(--text); text-decoration:none; font-size:14px; font-family:var(--font-sf); text-transform:uppercase; letter-spacing:0.04em; padding:7px 0;">{{ c.label }}</a>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+          <a href="Home.dc.html#about" class="nav-link" style="color:var(--text); text-decoration:none; font-size:14px; font-family:var(--font-sf); text-transform:uppercase; letter-spacing:0.04em;">About me</a>
+          <a href="#" class="nav-link" style="color:var(--text); text-decoration:none; font-size:14px; font-family:var(--font-sf); text-transform:uppercase; letter-spacing:0.04em;">Services</a>
+          <a href="Home.dc.html#contacts" class="nav-link" style="color:var(--text); text-decoration:none; font-size:14px; font-family:var(--font-sf); text-transform:uppercase; letter-spacing:0.04em;">Contacts</a>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ toggleMenu }}" aria-label="Menu" style="display:flex; flex-direction:column; justify-content:center; gap:5px; width:44px; height:44px; background:transparent; border:none; cursor:pointer; padding:10px;">
+          <sc-if value="{{ menuClosed }}" hint-placeholder-val="{{ true }}">
+            <span style="display:block; height:2px; width:100%; background:var(--text);"></span>
+            <span style="display:block; height:2px; width:100%; background:var(--text);"></span>
+            <span style="display:block; height:2px; width:100%; background:var(--text);"></span>
+          </sc-if>
+          <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+            <span style="display:block; height:2px; width:100%; background:var(--accent); transform:rotate(45deg) translateY(5px);"></span>
+            <span style="display:block; height:2px; width:100%; background:var(--accent); opacity:0;"></span>
+            <span style="display:block; height:2px; width:100%; background:var(--accent); transform:rotate(-45deg) translateY(-5px);"></span>
+          </sc-if>
+        </button>
+      </sc-if>
+    </nav>
+
+    <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:relative; z-index:6; background:var(--card); display:flex; flex-direction:column; padding:8px clamp(20px,6vw,92px);">
+        <a href="Gallery.dc.html" style="color:var(--accent); text-decoration:none; font-size:15px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.1);">Miniatures</a>
+        <a href="Home.dc.html#about" style="color:var(--text); text-decoration:none; font-size:15px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.1);">About me</a>
+        <a href="#" style="color:var(--text); text-decoration:none; font-size:15px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.1);">Services</a>
+        <a href="Home.dc.html#contacts" style="color:var(--text); text-decoration:none; font-size:15px; padding:14px 0;">Contacts</a>
+      </div>
+    </sc-if>
+  </header>
+
+  <!-- ===== CONTENT ===== -->
+  <main style="position:relative; z-index:1; max-width:1432px; margin:0 auto; padding:56px clamp(24px,6vw,92px) 120px;">
+
+    <h1 style="font-family:var(--font-display); font-weight:400; font-size:clamp(64px,9vw,120px); line-height:0.92; letter-spacing:0.01em; color:var(--text); margin:0 0 40px;">Showcase</h1>
+
+    <!-- category tabs -->
+    <div style="display:flex; flex-wrap:wrap; align-items:center; margin-bottom:40px;">
+      <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="7">
+        <sc-if value="{{ tab.active }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ tab.onClick }}" style="font-family:var(--font-sf); font-weight:400; font-size:18px; line-height:1; color:var(--accent); background:transparent; border:none; padding:11px 12px; cursor:pointer; text-transform:uppercase; text-decoration:underline; text-underline-offset:8px;">{{ tab.label }}</button>
+        </sc-if>
+        <sc-if value="{{ tab.inactive }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ tab.onClick }}" class="tab-btn" style="font-family:var(--font-sf); font-weight:400; font-size:18px; line-height:1; color:var(--text); background:transparent; border:none; padding:11px 12px; cursor:pointer; text-transform:uppercase;">{{ tab.label }}</button>
+        </sc-if>
+      </sc-for>
+    </div>
+
+    <!-- grid -->
+    <div class="gallery-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(258px, 1fr)); gap:16px; overflow:visible;">
+      <sc-if value="{{ showDeco }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ decoStyle }}">
+          <div style="{{ decoImgStyle }}"></div>
+        </div>
+      </sc-if>
+
+      <sc-for list="{{ items }}" as="art" hint-placeholder-count="8">
+        <a href="{{ art.href }}" class="gallery-card" onMouseEnter="{{ art.onHoverIn }}" onMouseLeave="{{ art.onHoverOut }}" style="position:relative; display:block; aspect-ratio:298/400; background:var(--bg-deep); overflow:hidden; text-decoration:none; cursor:pointer;" style-hover="outline:1px solid var(--line)">
+          <div style="{{ art.imgStyle }}" style-hover="transform:scale(1.04)"></div>
+          <div style="position:absolute; left:0; right:0; bottom:0; height:120px; background:linear-gradient(to top, rgba(7,7,7,0.85), transparent); pointer-events:none;"></div>
+          <!-- hover arrows -->
+          <sc-if value="{{ art.showArrows }}" hint-placeholder-val="{{ false }}">
+            <div style="{{ art.arrowsStyle }}">
+              <button onClick="{{ art.onPrev }}" style="pointer-events:all; width:36px; height:56px; background:rgba(0,0,0,0.5); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text); flex-shrink:0;">
+                <span style="display:block; width:8px; height:8px; border-left:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg); margin-left:4px;"></span>
+              </button>
+              <button onClick="{{ art.onNext }}" style="pointer-events:all; width:36px; height:56px; background:rgba(0,0,0,0.5); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text); flex-shrink:0;">
+                <span style="display:block; width:8px; height:8px; border-right:2px solid currentColor; border-top:2px solid currentColor; transform:rotate(45deg); margin-right:4px;"></span>
+              </button>
+            </div>
+          </sc-if>
+          <div style="position:absolute; left:16px; bottom:18px; display:flex; gap:5px;">
+            <sc-for list="{{ art.dots }}" as="dot" hint-placeholder-count="3">
+              <sc-if value="{{ dot.first }}" hint-placeholder-val="{{ true }}"><span style="width:5px; height:5px; border-radius:50%; background:var(--accent);"></span></sc-if>
+              <sc-if value="{{ dot.rest }}" hint-placeholder-val="{{ true }}"><span style="width:5px; height:5px; border-radius:50%; background:rgba(238,233,219,0.4);"></span></sc-if>
+            </sc-for>
+          </div>
+          <div style="position:absolute; right:14px; bottom:16px; display:flex; align-items:center; gap:10px; padding:6px 0;">
+            <sc-if value="{{ art.available }}" hint-placeholder-val="{{ true }}"><span style="width:6px; height:6px; border-radius:50%; background:var(--available);"></span><span style="font-family:var(--font-mono); font-weight:500; font-size:14px; line-height:1; color:var(--available);">Available</span></sc-if>
+            <sc-if value="{{ art.sold }}" hint-placeholder-val="{{ true }}"><span style="width:6px; height:6px; border-radius:50%; background:var(--sold);"></span><span style="font-family:var(--font-mono); font-weight:500; font-size:14px; line-height:1; color:var(--sold);">Sold</span></sc-if>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+    <sc-if value="{{ empty }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:80px 0; text-align:center; color:var(--text-dim); font-size:16px;">No pieces in this category yet.</div>
+    </sc-if>
+
+  </main>
+
+  <!-- ===== FOOTER BAR ===== -->
+  <footer style="position:relative; z-index:1; border-top:1px solid var(--foot-line); display:flex; flex-direction:row; flex-wrap:wrap; gap:12px; padding:36px clamp(20px,6vw,40px); justify-content:space-between; align-items:center;">
+    <span style="font-family:var(--font-mono); font-size:14px; color:var(--text-dim);">&copy; Dead Miniatures 2026</span>
+    <span style="font-family:var(--font-mono); font-size:14px; color:var(--text-dim);">Custom miniature painting</span>
+    <a href="#" style="font-family:var(--font-mono); font-size:14px; color:var(--text-dim); text-decoration:none;" style-hover="color:var(--accent)">Privacy Policy</a>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { cat: "ALL", mobile: false, menuOpen: false, navOpen: false, cols: 3, imgIndexes: {}, hoveredCard: null, artworks: [], loading: true };
+
+  static SUPABASE_URL = "https://edfexwfjaiuslupuvyev.supabase.co";
+  static ANON_KEY = "sb_publishable_mHLjgAyByy9o_XplLrNZ7g_FIXnEHRN";
+
+  componentDidMount() {
+    this.mq = window.matchMedia("(max-width: 820px)");
+    this.onMQ = () => this.setState({ mobile: this.mq.matches, menuOpen: false });
+    this.onMQ();
+    this.mq.addEventListener("change", this.onMQ);
+
+    // Fetch artworks from Supabase
+    fetch(
+      Component.SUPABASE_URL + "/rest/v1/artworks?select=id,name,category,status,image_url,extra_images&order=id.desc",
+      { headers: { "apikey": Component.ANON_KEY, "Authorization": "Bearer " + Component.ANON_KEY } }
+    )
+      .then(r => r.json())
+      .then(data => this.setState({ artworks: Array.isArray(data) ? data : [], loading: false }))
+      .catch(() => this.setState({ loading: false }));
+
+    const detectCols = () => {
+      const grid = document.querySelector('.gallery-grid');
+      if (!grid) return;
+      const cols = getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length;
+      this.setState({ cols });
+    };
+    this._ro = new ResizeObserver(detectCols);
+    setTimeout(() => {
+      const grid = document.querySelector('.gallery-grid');
+      if (grid) this._ro.observe(grid);
+      detectCols();
+    }, 100);
+
+    // read category from URL hash e.g. #SMALL%20SCALE
+    const CATS = ["ALL", "SINGLE", "SQUAD", "VEHICLE", "DIORAMA", "BUSTS", "SMALL SCALE"];
+    const hash = decodeURIComponent(window.location.hash.slice(1));
+    if (hash && CATS.includes(hash)) this.setState({ cat: hash });
+
+    // also react if user navigates via hash change
+    this.onHash = () => {
+      const h = decodeURIComponent(window.location.hash.slice(1));
+      if (h && CATS.includes(h)) this.setState({ cat: h });
+    };
+    window.addEventListener("hashchange", this.onHash);
+  }
+  componentWillUnmount() {
+    if (this.mq) this.mq.removeEventListener("change", this.onMQ);
+    if (this._ro) this._ro.disconnect();
+    if (this.onHash) window.removeEventListener("hashchange", this.onHash);
+  }
+
+  get data() {
+    return this.state.artworks.map(a => ({
+      id: a.id,
+      name: a.name,
+      category: a.category,
+      status: a.status,
+      image: a.image_url || "public/samples/mini-1.png",
+      extra: a.extra_images ? a.extra_images.length : 0,
+      extraImages: a.extra_images || [],
+    }));
+  }
+
+  renderVals() {
+    const CATS = ["ALL", "SINGLE", "SQUAD", "VEHICLE", "DIORAMA", "BUSTS", "SMALL SCALE"];
+    const cat = this.state.cat;
+
+    const filtered = cat === "ALL" ? this.data : this.data.filter(a => a.category === cat);
+
+    const allSamples = ["public/samples/mini-1.png","public/samples/mini-2.png","public/samples/mini-3.png","public/samples/mini-4.png","public/samples/showcase-1.png","public/samples/showcase-2.png"];
+    const imgIndexes = this.state.imgIndexes;
+
+    const items = filtered.map(a => {
+      const total = Math.max(1, (a.extra || 0) + 1);
+      const images = Array.from({ length: total }, (_, i) => i === 0 ? a.image : allSamples[i % allSamples.length]);
+      const idx = imgIndexes[a.id] || 0;
+      const n = total;
+      const dots = Array.from({ length: n }, (_, i) => ({ first: i === idx, rest: i !== idx }));
+      const setIdx = (newIdx, e) => { e.preventDefault(); e.stopPropagation(); this.setState(s => ({ imgIndexes: { ...s.imgIndexes, [a.id]: (newIdx + n) % n } })); };
+      const hovered = this.state.hoveredCard === a.id;
+      return {
+        ...a,
+        available: a.status === "available",
+        sold: a.status !== "available",
+        dots,
+        href: "Product.dc.html",
+        showArrows: total > 1,
+        arrowsStyle: { position: "absolute", inset: 0, display: "flex", justifyContent: "space-between", alignItems: "center", opacity: hovered ? 1 : 0, transition: "opacity 0.2s", pointerEvents: "none" },
+        onHoverIn: () => this.setState({ hoveredCard: a.id }),
+        onHoverOut: () => this.setState({ hoveredCard: null }),
+        onPrev: (e) => setIdx(idx - 1, e),
+        onNext: (e) => setIdx(idx + 1, e),
+        imgStyle: {
+          position: "absolute", inset: 0,
+          backgroundImage: "url('" + images[idx] + "')",
+          backgroundSize: "cover", backgroundPosition: "center",
+          transition: "transform .5s ease",
+        },
+      };
+    });
+
+    const tabs = CATS.map(c => ({
+      label: c,
+      active: c === cat,
+      inactive: c !== cat,
+      onClick: () => this.setState({ cat: c }),
+    }));
+
+    const decoImages = {
+        ALL:          "public/samples/all-xs.png",
+        SINGLE:       "public/samples/single-xs.png",
+        SQUAD:        "public/samples/single-xs.png",
+        VEHICLE:      "public/samples/vehicle-xs.png",
+        DIORAMA:      "public/samples/single-xs.png",
+        BUSTS:        "public/samples/busts-xs.png",
+        "SMALL SCALE": "public/samples/small-scale-xs.png",
+      };
+
+    return {
+      textureStyle: { position: "fixed", inset: 0, backgroundImage: "url('public/brand/scratch-tex.png')", backgroundSize: "cover", backgroundPosition: "center", opacity: 0.18, mixBlendMode: "color-dodge", pointerEvents: "none", zIndex: 0 },
+      decoImgStyle: { position: "absolute", left: 0, bottom: 0, height: "130%", width: "auto", aspectRatio: "1/1", backgroundImage: "url('" + (decoImages[cat] || "public/samples/single-xs.png") + "')", backgroundSize: "contain", backgroundPosition: "left bottom", backgroundRepeat: "no-repeat" },
+      showDeco: (this.state.cols || 3) >= 3,
+      decoStyle: { gridRow: 1, gridColumn: '-2 / -1', position: 'relative', aspectRatio: '298/400', overflow: 'visible', pointerEvents: 'none' },
+      tabs,
+      items,
+      empty: items.length === 0,
+      mobile: this.state.mobile,
+      desktop: !this.state.mobile,
+      menuOpen: this.state.menuOpen,
+      menuClosed: !this.state.menuOpen,
+      toggleMenu: () => this.setState(s => ({ menuOpen: !s.menuOpen })),
+      navOpen: this.state.navOpen,
+      navEnter: () => this.setState({ navOpen: true }),
+      navLeave: () => this.setState({ navOpen: false }),
+      miniNavClass: this.state.navOpen ? "nav-link nav-link-open" : "nav-link",
+      catLinks: ["Single", "Squad", "Vehicle", "Diorama", "Busts", "Small Scale"].map(l => ({ label: l, href: "Gallery.dc.html#" + l.toUpperCase() })),
+    };
+  }
+}
+</script>
+</body>
+</html>
