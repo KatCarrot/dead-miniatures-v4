@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const SHOWCASE_CATS = [
   "SINGLE",
@@ -44,6 +44,17 @@ export default function HomeView() {
   const [ppHover, setPpHover] = useState<ShowcaseCat | null>(null);
   const [emailVal, setEmailVal] = useState("");
 
+  // responsive fallbacks — mirror Home.dc.html's truncation-based stacking
+  const [showcaseStacked, setShowcaseStacked] = useState(false);
+  const [quoteStacked, setQuoteStacked] = useState(false);
+  const [contactWrapped, setContactWrapped] = useState(false);
+
+  const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const quoteMeasureRef = useRef<HTMLDivElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const visualRef = useRef<HTMLDivElement | null>(null);
+  const colRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 900px)");
     const onMQ = () => setMobile(mq.matches);
@@ -72,11 +83,83 @@ export default function HomeView() {
     return () => mq.removeEventListener("change", onMQ);
   }, []);
 
+  // --- showcase tab-list truncation -> stack list above photos ---
+  useEffect(() => {
+    const check = () => {
+      if (mobile) {
+        setShowcaseStacked((prev) => (prev ? false : prev));
+        return;
+      }
+      let truncated = false;
+      Object.values(rowRefs.current).forEach((el) => {
+        if (el && el.scrollWidth > el.clientWidth + 1) truncated = true;
+      });
+      setShowcaseStacked((prev) => (prev !== truncated ? truncated : prev));
+    };
+    const onResize = () => requestAnimationFrame(check);
+    window.addEventListener("resize", onResize);
+    const t = setTimeout(check, 150);
+    check();
+    return () => {
+      window.removeEventListener("resize", onResize);
+      clearTimeout(t);
+    };
+  });
+
+  // --- quote section: absolute layout doesn't fit -> stacked column layout ---
+  useEffect(() => {
+    const check = () => {
+      const el = quoteMeasureRef.current;
+      if (!el) return;
+      const truncated = el.scrollWidth > el.clientWidth + 2;
+      setQuoteStacked((prev) => (prev !== truncated ? truncated : prev));
+    };
+    const onResize = () => requestAnimationFrame(check);
+    window.addEventListener("resize", onResize);
+    const t = setTimeout(check, 150);
+    check();
+    return () => {
+      window.removeEventListener("resize", onResize);
+      clearTimeout(t);
+    };
+  });
+
+  // --- contacts row: 3rd column wraps to its own row when space runs out ---
+  useEffect(() => {
+    const check = () => {
+      const formEl = formRef.current;
+      const visEl = visualRef.current;
+      const colEl = colRef.current;
+      if (mobile || !formEl || !visEl || !colEl) {
+        setContactWrapped((prev) => (prev ? false : prev));
+        return;
+      }
+      const container = colEl.parentElement;
+      if (!container) return;
+      const avail = container.getBoundingClientRect().width;
+      const needed =
+        formEl.getBoundingClientRect().width +
+        visEl.getBoundingClientRect().width +
+        270;
+      const wrapped = avail < needed - 1;
+      setContactWrapped((prev) => (prev !== wrapped ? wrapped : prev));
+    };
+    const onResize = () => requestAnimationFrame(check);
+    window.addEventListener("resize", onResize);
+    const t = setTimeout(check, 150);
+    check();
+    return () => {
+      window.removeEventListener("resize", onResize);
+      clearTimeout(t);
+    };
+  });
+
   const m = mobile;
   const cat = ppCat;
   const litCat = ppHover || cat;
   const [img1, img2] = IMAGES[litCat];
   const sendDisabled = !emailVal.trim();
+  const mobileLike = m || showcaseStacked;
 
   return (
     <>
@@ -262,18 +345,18 @@ export default function HomeView() {
         <div
           style={{
             display: "flex",
-            flexDirection: m ? "column" : "row",
-            gap: m ? 0 : 60,
-            alignItems: m ? "stretch" : "flex-start",
+            flexDirection: mobileLike ? "column" : "row",
+            gap: mobileLike ? 0 : 60,
+            alignItems: mobileLike ? "stretch" : "flex-start",
             justifyContent: "flex-start",
           }}
         >
           {/* vertical tab list */}
           <div
             style={{
-              width: m ? "100%" : 434,
+              width: mobileLike ? "100%" : 434,
               flexShrink: 0,
-              height: m ? "auto" : 566,
+              height: mobileLike ? "auto" : 566,
               display: "flex",
               flexDirection: "column",
             }}
@@ -290,9 +373,16 @@ export default function HomeView() {
                     setPpCat(k);
                     setPpHover(null);
                   }}
-                  onClick={() => {
-                    window.location.href = "/showcase#" + k;
-                  }}
+                  onClick={
+                    m
+                      ? () => {
+                          setPpCat(k);
+                          setPpHover(null);
+                        }
+                      : () => {
+                          window.location.href = "/showcase#" + k;
+                        }
+                  }
                   style={{
                     cursor: "pointer",
                     flex: 1,
@@ -301,12 +391,16 @@ export default function HomeView() {
                   }}
                 >
                   <div
+                    ref={(el) => {
+                      rowRefs.current[k] = el;
+                    }}
                     style={{
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
                       flex: 1,
                       width: "100%",
+                      overflow: "hidden",
                     }}
                   >
                     <span
@@ -314,7 +408,7 @@ export default function HomeView() {
                         fontFamily: "var(--font-sf)",
                         fontSize: "clamp(20px,2.2vw,32px)",
                         color: isLit ? "var(--accent)" : "var(--text)",
-                        padding: "5px 0",
+                        padding: m ? "9px 0" : "5px 0",
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -322,7 +416,9 @@ export default function HomeView() {
                       <span style={{ opacity: 0.4 }}> / {COUNTS[k]}</span>
                     </span>
                     {isLit && (
-                      <span
+                      <a
+                        href={"/showcase#" + k}
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                           fontFamily: "var(--font-sf)",
                           fontSize: 13,
@@ -331,13 +427,14 @@ export default function HomeView() {
                           flexShrink: 0,
                           textTransform: "uppercase",
                           letterSpacing: "0.04em",
+                          textDecoration: "none",
                         }}
                       >
                         View All
-                      </span>
+                      </a>
                     )}
                   </div>
-                  {isActive && m && (
+                  {isActive && mobileLike && (
                     <div
                       style={{
                         display: "grid",
@@ -358,7 +455,7 @@ export default function HomeView() {
             <div
               style={{
                 display: "flex",
-                justifyContent: "flex-start",
+                justifyContent: mobileLike ? "center" : "flex-start",
                 marginTop: m ? 32 : 48,
               }}
             >
@@ -385,8 +482,8 @@ export default function HomeView() {
             </div>
           </div>
 
-          {/* right: overlapping rotated photos (desktop) */}
-          {!m && (
+          {/* right: overlapping rotated photos (desktop only, list not stacked) */}
+          {!mobileLike && (
             <div
               style={{
                 position: "relative",
@@ -425,15 +522,160 @@ export default function HomeView() {
             zIndex: 0,
           }}
         />
+
+        {quoteStacked && (
+          <div
+            style={{
+              position: "relative",
+              zIndex: 2,
+              width: "100%",
+              maxWidth: 640,
+              margin: "0 auto",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: 28,
+            }}
+          >
+            <h2
+              style={{
+                fontFamily: "var(--font-anton)",
+                fontWeight: 400,
+                fontSize: "clamp(40px,12vw,90px)",
+                lineHeight: 1,
+                color: "var(--text)",
+                margin: 0,
+                textTransform: "uppercase",
+              }}
+            >
+              No shortcuts.
+            </h2>
+
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                aspectRatio: "339/219",
+                overflow: "hidden",
+                background: "url('/samples/video-thumb.png') center/cover no-repeat",
+                backgroundColor: "var(--card)",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "rgba(0,0,0,0.4)",
+                  mixBlendMode: "color",
+                  pointerEvents: "none",
+                }}
+              />
+              <button
+                aria-label="Play"
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%,-50%)",
+                  width: 90,
+                  height: 90,
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 0,
+                  zIndex: 1,
+                }}
+              >
+                <span
+                  style={{
+                    display: "block",
+                    width: 0,
+                    height: 0,
+                    borderLeft: "27px solid var(--accent)",
+                    borderTop: "18px solid transparent",
+                    borderBottom: "18px solid transparent",
+                    marginLeft: 6,
+                  }}
+                />
+              </button>
+            </div>
+
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 16,
+                lineHeight: 1.7,
+                color: "var(--accent)",
+              }}
+            >
+              / Kisa
+              <br />/ Miniature artist
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: 14,
+                flexWrap: "wrap",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "var(--font-sf)",
+                  fontWeight: 400,
+                  fontSize: "clamp(24px,7vw,40px)",
+                  color: "var(--text)",
+                  textTransform: "uppercase",
+                  lineHeight: 1,
+                }}
+              >
+                Just
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-anton)",
+                  fontWeight: 400,
+                  fontSize: "clamp(40px,12vw,90px)",
+                  color: "var(--text)",
+                  lineHeight: 1,
+                  textTransform: "uppercase",
+                }}
+              >
+                Paint.
+              </span>
+            </div>
+          </div>
+        )}
+
         <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            width: "100%",
-            maxWidth: 1416,
-            margin: "0 auto",
-            height: "clamp(540px,50vw,720px)",
-          }}
+          ref={quoteMeasureRef}
+          style={
+            quoteStacked
+              ? {
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: -1,
+                  visibility: "hidden",
+                  pointerEvents: "none",
+                  maxWidth: 1416,
+                  margin: "0 auto",
+                  height: "clamp(540px,50vw,720px)",
+                }
+              : {
+                  position: "relative",
+                  zIndex: 2,
+                  width: "100%",
+                  maxWidth: 1416,
+                  margin: "0 auto",
+                  height: "clamp(540px,50vw,720px)",
+                }
+          }
         >
           <h2
             style={{
@@ -597,16 +839,18 @@ export default function HomeView() {
             style={{
               display: "flex",
               flexDirection: m ? "column" : "row",
-              gap: m ? 16 : 0,
+              flexWrap: m ? undefined : "wrap",
+              gap: 0,
               alignItems: "stretch",
             }}
           >
             {/* form card */}
             <form
+              ref={formRef}
               onSubmit={(e) => e.preventDefault()}
               style={{
                 position: "relative",
-                width: m ? "100%" : 501,
+                width: m ? "100%" : "clamp(450px, calc(450px + (100vw - 900px) * 0.911), 501px)",
                 flexShrink: 0,
                 background: "var(--card)",
                 boxShadow: "inset 0 0 0 1px rgba(28,30,31,1)",
@@ -704,6 +948,7 @@ export default function HomeView() {
 
             {/* visual card */}
             <div
+              ref={visualRef}
               style={{
                 position: "relative",
                 overflow: "hidden",
@@ -793,12 +1038,28 @@ export default function HomeView() {
 
             {/* contact cards */}
             <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                width: m ? "100%" : 380,
-                flexShrink: 0,
-              }}
+              ref={colRef}
+              style={
+                contactWrapped
+                  ? {
+                      display: "flex",
+                      flexDirection: "column",
+                      width:
+                        "min(100%, calc(310px + clamp(450px, calc(450px + (100vw - 900px) * 0.911), 501px)))",
+                      flexBasis: "auto",
+                      flexGrow: 0,
+                      flexShrink: 0,
+                    }
+                  : {
+                      display: "flex",
+                      flexDirection: "column",
+                      width: m ? "100%" : "auto",
+                      flexBasis: m ? undefined : 290,
+                      minWidth: m ? undefined : 270,
+                      flexGrow: m ? 0 : 1,
+                      flexShrink: m ? 0 : 1,
+                    }
+              }
             >
               <div style={contactCard}>
                 <span style={contactKicker}>/ WRITE DIRECTLY</span>
@@ -810,11 +1071,15 @@ export default function HomeView() {
                     color: "var(--text)",
                     textDecoration: "none",
                     cursor: "default",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   deadminiatures@gmail.com
                 </a>
-                <div style={contactIcon("/icons/mail.svg", -8)} className="contact-icon" />
+                <div
+                  style={contactIcon("/icons/mail.svg", -6, contactWrapped)}
+                  className="contact-icon"
+                />
               </div>
               <a
                 href="https://www.instagram.com/deadminiatures/"
@@ -834,7 +1099,7 @@ export default function HomeView() {
                   Finished works &amp; DM
                 </span>
                 <div
-                  style={contactIcon("/icons/instagram.svg", -6)}
+                  style={contactIcon("/icons/instagram.svg", -6, contactWrapped)}
                   className="contact-icon"
                 />
               </a>
@@ -856,7 +1121,7 @@ export default function HomeView() {
                   Painting process &amp; studio videos
                 </span>
                 <div
-                  style={contactIcon("/icons/youtube.svg", -6)}
+                  style={contactIcon("/icons/youtube.svg", -6, contactWrapped)}
                   className="contact-icon"
                 />
               </a>
@@ -918,14 +1183,20 @@ const contactKicker: React.CSSProperties = {
   color: "var(--accent)",
 };
 
-function contactIcon(src: string, right: number): React.CSSProperties {
+function contactIcon(
+  src: string,
+  right: number,
+  wrapped: boolean
+): React.CSSProperties {
+  const size = wrapped ? 70 : 105;
   return {
     position: "absolute",
+    zIndex: -1,
     right,
     top: "50%",
     transform: "translateY(-50%)",
-    width: 105,
-    height: 105,
+    width: size,
+    height: size,
     backgroundColor: "rgb(30,30,30)",
     WebkitMask: `url('${src}') no-repeat center/contain`,
     mask: `url('${src}') no-repeat center/contain`,
