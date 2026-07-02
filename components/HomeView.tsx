@@ -356,7 +356,9 @@ export default function HomeView() {
           {/* vertical tab list */}
           <div
             style={{
-              width: mobileLike ? "100%" : 434,
+              width: mobileLike
+                ? "100%"
+                : "clamp(300px, calc(300px + (100vw - 1072px) * 0.779), 434px)",
               flexShrink: 0,
               height: mobileLike ? "auto" : 566,
               display: "flex",
@@ -489,14 +491,22 @@ export default function HomeView() {
             <div
               style={{
                 position: "relative",
-                width: 700,
+                width: "clamp(420px, calc(420px + (100vw - 900px) * 1.628), 700px)",
                 minHeight: 606,
                 flexShrink: 0,
                 pointerEvents: "none",
               }}
             >
               <div style={bigImg(img1, 60, 0, 401, 566)} />
-              <div style={bigImg(img2, 488, 244, 255, 362)} />
+              <div
+                style={bigImg(
+                  img2,
+                  "clamp(260px, calc(260px + (100vw - 900px) * 1.628), 488px)",
+                  244,
+                  255,
+                  362
+                )}
+              />
             </div>
           )}
         </div>
@@ -1147,7 +1157,7 @@ function mobileImg(src: string): React.CSSProperties {
 
 function bigImg(
   src: string,
-  left: number,
+  left: number | string,
   top: number,
   width: number,
   height: number

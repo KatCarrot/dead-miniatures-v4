@@ -105,7 +105,7 @@ export default function SiteHeader({ variant = "inner" }: Props) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 clamp(20px,6vw,112px)",
+          padding: mobile ? "6px clamp(20px,6vw,112px)" : "0 clamp(20px,6vw,112px)",
           maxWidth: 1432,
           margin: "0 auto -20px",
           width: "100%",
@@ -121,12 +121,21 @@ export default function SiteHeader({ variant = "inner" }: Props) {
           }}
         >
           <div
-            style={{
-              width: 85,
-              height: 74,
-              background:
-                "url('/brand/dead-logo.png') left center/contain no-repeat",
-            }}
+            style={
+              mobile
+                ? {
+                    width: 77,
+                    height: 67,
+                    background:
+                      "url('/brand/dead-logo.png') left center/contain no-repeat",
+                  }
+                : {
+                    width: 85,
+                    height: 74,
+                    background:
+                      "url('/brand/dead-logo.png') left center/contain no-repeat",
+                  }
+            }
           />
         </Link>
 
@@ -224,7 +233,7 @@ export default function SiteHeader({ variant = "inner" }: Props) {
             aria-label="Menu"
             style={{
               position: "relative",
-              zIndex: 62,
+              zIndex: 63,
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
@@ -235,6 +244,8 @@ export default function SiteHeader({ variant = "inner" }: Props) {
               cursor: "pointer",
               padding: 10,
             }}
+            // stays above the open drawer (z-index 62) so the close (X) icon
+            // remains visible/clickable while the menu is open
           >
             <span
               style={{
