@@ -264,7 +264,7 @@ export default function SiteHeader({ variant = "inner" }: Props) {
               position: "fixed",
               inset: 0,
               background: "rgba(0,0,0,0.55)",
-              zIndex: 59,
+              zIndex: 61,
             }}
           />
           <div
@@ -276,7 +276,7 @@ export default function SiteHeader({ variant = "inner" }: Props) {
               width: "80%",
               maxWidth: 340,
               background: "var(--card)",
-              zIndex: 60,
+              zIndex: 62,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",

@@ -260,10 +260,10 @@ export default function HomeView() {
               textTransform: "uppercase",
             }}
           >
-            <span style={{ display: "block", fontSize: "clamp(78px,12vw,144px)" }}>
+            <span style={{ display: "block", fontSize: "clamp(44px, min(12vw, 13vh), 144px)" }}>
               I Paint
             </span>
-            <span style={{ display: "block", fontSize: "clamp(78px,12vw,144px)" }}>
+            <span style={{ display: "block", fontSize: "clamp(44px, min(12vw, 13vh), 144px)" }}>
               Miniatures
             </span>
           </h1>
@@ -291,6 +291,8 @@ export default function HomeView() {
           position: "relative",
           zIndex: 1,
           width: "100%",
+          maxWidth: 1416,
+          margin: "0 auto",
           padding: "180px clamp(20px,6vw,112px) 180px",
           background: "var(--bg)",
         }}
@@ -1166,6 +1168,7 @@ function bigImg(
 
 const contactCard: React.CSSProperties = {
   position: "relative",
+  zIndex: 0,
   overflow: "hidden",
   background: "var(--card)",
   boxShadow: "inset 0 0 0 1px rgba(28,30,31,1)",
