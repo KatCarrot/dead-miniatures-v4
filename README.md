@@ -16,6 +16,8 @@ npm run dev                         # http://localhost:3000
 | `/`              | `app/page.tsx`                | Landing: hero, showcase tabs, quote/video, contacts.         |
 | `/showcase`      | `app/showcase/page.tsx`       | Gallery. Client-fetches `artworks`; category tabs + deco art. |
 | `/artwork/[id]`  | `app/artwork/[id]/page.tsx`   | Product. Media viewer, thumbnails, lightbox, prev/next.      |
+| `/login`         | `app/login/page.tsx`          | Google sign-in for the admin.                                |
+| `/admin`         | `app/admin/page.tsx`          | Add-a-piece form. Guarded — allowlisted Google account only. |
 
 Logo + "Home" → `/`. Header **MINIATURES** → `/showcase`.
 
@@ -28,7 +30,14 @@ app/
   page.tsx               /
   showcase/page.tsx      /showcase
   artwork/[id]/page.tsx  /artwork/[id]
+  login/page.tsx         /login  — Google sign-in (admin)
+  admin/page.tsx         /admin  — new-artwork form (guarded)
+  admin/AdminForm.tsx    the form UI (client)
+  api/auth/[...nextauth]/route.ts   Auth.js handlers
+  api/artworks/route.ts  POST — session-guarded insert + image upload
   not-found.tsx          themed 404
+auth.ts                  Auth.js config: Google + admin email allowlist
+middleware.ts            protects /admin/*
 components/
   SiteHeader.tsx         responsive nav (burger + MINIATURES dropdown)
   SiteFooter.tsx         footer bar
@@ -36,14 +45,16 @@ components/
   GalleryView.tsx        showcase grid: tabs, deco figure, card carousels
   ProductView.tsx        product detail: media viewer, lightbox, prev/next
 lib/
-  supabaseClient.ts      anon read client
+  supabaseClient.ts      anon read client (public site)
+  supabaseAdmin.ts       service-role client (SERVER ONLY — admin writes)
   queries.ts             getLatestArtworks / getArtworks / getArtwork
 config/
   categories.ts          category keys + labels (single source)
 types/
   artwork.ts             Artwork type + Category union
 sql/
-  setup.sql              full DB setup: tables + seed + RLS — run once
+  setup.sql              tables + seed + public-read RLS — run once
+  admin.sql              storage bucket + policies for the admin panel
   policies.sql           RLS read policy on its own (if tables already exist)
 public/
   brand/                 logo, hero/quote backgrounds, scratch textures
@@ -119,3 +130,62 @@ there and it propagates through every component (utilities `bg-bg`, `text-cream`
   `image_url` + `extra_images`.
 - **Gallery** — `GalleryView` client-fetches the full `artworks` table and
   filters by the active category tab in the browser.
+
+## Admin panel (`/admin`)
+
+A private form to add new pieces without touching Supabase directly. Photos
+upload to Supabase Storage; a new row is inserted and appears live in the
+showcase immediately.
+
+### How access is locked down
+
+- **Google sign-in** via Auth.js (NextAuth v5). No passwords to store. Any
+  verified Google account can sign in — sign-in itself is never gated.
+- **Allowlist** — admin *privileges* are checked separately, against the
+  Google OIDC `sub` (stable account id, not email) in the `ADMIN_GOOGLE_SUBS`
+  env var. This list lives in environment variables (`.env.local` locally,
+  Vercel dashboard in prod) — **never in the committed source**. Read your
+  own sub via `GET /api/whoami` after signing in.
+- **`middleware.ts`** bounces any unauthenticated hit on `/admin/*` to
+  `/login`; `/admin` and the write API route additionally re-check
+  `isAdminSub` server-side.
+- **Writes use the service-role key** only inside the server API route
+  (`app/api/artworks/route.ts`), which re-checks the session. That key is
+  server-only (no `NEXT_PUBLIC_` prefix) and never reaches the browser. The
+  public site keeps using the read-only anon key.
+
+### One-time setup
+
+1. **Run `sql/admin.sql`** in the Supabase SQL editor — creates the public
+   `artwork-images` storage bucket and its read policy.
+
+2. **Google OAuth credentials** — Google Cloud Console → *APIs & Services* →
+   *Credentials* → *Create OAuth client ID* → *Web application*:
+   - Authorized JavaScript origins: `http://localhost:3000` and your prod URL
+   - Authorized redirect URIs:
+     `http://localhost:3000/api/auth/callback/google` and
+     `https://YOUR-DOMAIN/api/auth/callback/google`
+   - Copy the **Client ID** and **Client secret**.
+
+3. **Fill `.env.local`** (already scaffolded — paste the missing values):
+
+   ```
+   SUPABASE_SERVICE_ROLE_KEY=   # Supabase → Settings → API → service_role
+   AUTH_SECRET=                 # openssl rand -base64 33
+   AUTH_GOOGLE_ID=              # from step 2
+   AUTH_GOOGLE_SECRET=          # from step 2
+   ADMIN_GOOGLE_SUBS=           # your Google "sub" — see step 4
+   ```
+
+   Add these same vars in **Vercel → Settings → Environment Variables** for prod.
+
+4. **Sign in at `/login`** with any Google account, then hit `GET /api/whoami`
+   to read your account's `sub`. Paste it into `ADMIN_GOOGLE_SUBS` (restart
+   the dev server / redeploy), then go to `/admin` → fill the form →
+   *Publish piece*. Add more admins later by extending `ADMIN_GOOGLE_SUBS`
+   (comma-separated), no code change needed.
+
+> Signing in never requires being on the allowlist. Accounts not in
+> `ADMIN_GOOGLE_SUBS` can still authenticate but are redirected away from
+> `/admin` and rejected by the write API.
+

@@ -18,10 +18,26 @@ const navLinkStyle: React.CSSProperties = {
   letterSpacing: "0.04em",
 };
 
+const barTransition =
+  "transform .35s cubic-bezier(.4,0,.2,1), top .35s cubic-bezier(.4,0,.2,1), opacity .25s ease, background .25s ease";
+
+function menuItemStyle(color: string): React.CSSProperties {
+  return {
+    color,
+    textDecoration: "none",
+    fontSize: 17,
+    fontFamily: "var(--font-sf)",
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    padding: "10px 0",
+  };
+}
+
 export default function SiteHeader({ variant = "inner" }: Props) {
   const [mobile, setMobile] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 900px)");
@@ -34,7 +50,15 @@ export default function SiteHeader({ variant = "inner" }: Props) {
     return () => mq.removeEventListener("change", onMQ);
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const smoothScroll = (id: string) => (e: React.MouseEvent) => {
+    setMenuOpen(false);
     if (variant !== "home") return; // inner pages: let the Link navigate to /#id
     const el = document.getElementById(id);
     if (!el) return;
@@ -45,14 +69,35 @@ export default function SiteHeader({ variant = "inner" }: Props) {
       top: el.getBoundingClientRect().top + window.scrollY - offset,
       behavior: "smooth",
     });
-    setMenuOpen(false);
   };
 
   const aboutHref = variant === "home" ? "#about" : "/#about";
   const contactsHref = variant === "home" ? "#contacts" : "/#contacts";
 
+  const barBase: React.CSSProperties = {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    height: 2,
+    borderRadius: 1,
+    background: menuOpen ? "var(--accent)" : "var(--text)",
+    transition: barTransition,
+  };
+
   return (
-    <header style={{ position: "sticky", top: 0, zIndex: 50 }}>
+    <>
+    <header
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: menuOpen ? 61 : 50,
+        background: scrolled ? "rgba(25,32,34,0.4)" : "transparent",
+        backdropFilter: scrolled ? "blur(18px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(18px)" : "none",
+        boxShadow: scrolled ? "0 1px 0 rgba(255,255,255,0.08)" : "none",
+        transition: "background .25s ease, box-shadow .25s ease",
+      }}
+    >
       <nav
         style={{
           position: "relative",
@@ -60,22 +105,25 @@ export default function SiteHeader({ variant = "inner" }: Props) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: mobile
-            ? "6px clamp(20px,6vw,112px)"
-            : "0 clamp(20px,6vw,112px)",
+          padding: "0 clamp(20px,6vw,112px)",
           maxWidth: 1432,
-          margin: "0 auto",
+          margin: "0 auto -20px",
           width: "100%",
         }}
       >
         <Link
           href="/"
-          style={{ display: "flex", alignItems: "center", flexShrink: 0 }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flexShrink: 0,
+            paddingBottom: 10,
+          }}
         >
           <div
             style={{
-              width: 230,
-              height: 128,
+              width: 85,
+              height: 74,
               background:
                 "url('/brand/dead-logo.png') left center/contain no-repeat",
             }}
@@ -175,10 +223,11 @@ export default function SiteHeader({ variant = "inner" }: Props) {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Menu"
             style={{
+              position: "relative",
+              zIndex: 62,
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              gap: 5,
               width: 44,
               height: 44,
               background: "transparent",
@@ -187,80 +236,124 @@ export default function SiteHeader({ variant = "inner" }: Props) {
               padding: 10,
             }}
           >
-            {!menuOpen ? (
-              <>
-                <span style={barStyle("var(--text)")} />
-                <span style={barStyle("var(--text)")} />
-                <span style={barStyle("var(--text)")} />
-              </>
-            ) : (
-              <>
-                <span
-                  style={{
-                    ...barStyle("var(--accent)"),
-                    transform: "rotate(45deg) translateY(5px)",
-                  }}
-                />
-                <span style={{ ...barStyle("var(--accent)"), opacity: 0 }} />
-                <span
-                  style={{
-                    ...barStyle("var(--accent)"),
-                    transform: "rotate(-45deg) translateY(-5px)",
-                  }}
-                />
-              </>
-            )}
+            <span
+              style={{
+                ...barBase,
+                top: menuOpen ? 21 : 15,
+                transform: menuOpen ? "rotate(45deg)" : "rotate(0deg)",
+              }}
+            />
+            <span style={{ ...barBase, top: 21, opacity: menuOpen ? 0 : 1 }} />
+            <span
+              style={{
+                ...barBase,
+                top: menuOpen ? 21 : 27,
+                transform: menuOpen ? "rotate(-45deg)" : "rotate(0deg)",
+              }}
+            />
           </button>
         )}
       </nav>
+    </header>
 
       {menuOpen && (
-        <div
-          style={{
-            position: "relative",
-            zIndex: 6,
-            background: "var(--card)",
-            display: "flex",
-            flexDirection: "column",
-            padding: "8px clamp(20px,6vw,92px)",
-          }}
-        >
-          <Link href="/showcase" style={mobileItem("var(--accent)", true)}>
-            Miniatures
-          </Link>
-          <Link
-            href={aboutHref}
-            onClick={smoothScroll("about")}
-            style={mobileItem("var(--text)", true)}
+        <>
+          <div
+            onClick={() => setMenuOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.55)",
+              zIndex: 59,
+            }}
+          />
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: "80%",
+              maxWidth: 340,
+              background: "var(--card)",
+              zIndex: 60,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
+              padding: "32px 24px 40px",
+              overflowY: "auto",
+              boxShadow: "-4px 0 32px rgba(0,0,0,0.5)",
+            }}
           >
-            About me
-          </Link>
-          <a href="#" style={mobileItem("var(--text)", true)}>
-            Services
-          </a>
-          <Link
-            href={contactsHref}
-            onClick={smoothScroll("contacts")}
-            style={mobileItem("var(--text)", false)}
-          >
-            Contacts
-          </Link>
-        </div>
+            <div
+              style={{
+                width: 110,
+                height: 96,
+                background:
+                  "url('/brand/dead-logo.png') center/contain no-repeat",
+                marginBottom: 20,
+              }}
+            />
+            <Link
+              href="/showcase"
+              onClick={() => setMenuOpen(false)}
+              style={menuItemStyle("var(--text)")}
+            >
+              Miniatures
+            </Link>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 8,
+                margin: "2px 0 14px",
+              }}
+            >
+              {HEADER_CATEGORIES.map((c) => (
+                <Link
+                  key={c.key}
+                  href={`/showcase#${c.key}`}
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    color: "var(--text-dim)",
+                    textDecoration: "none",
+                    fontSize: 17,
+                    fontFamily: "var(--font-sf)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.03em",
+                    padding: "5px 0",
+                  }}
+                >
+                  {c.label}
+                </Link>
+              ))}
+            </div>
+            <Link
+              href={aboutHref}
+              onClick={smoothScroll("about")}
+              style={menuItemStyle("var(--text)")}
+            >
+              About me
+            </Link>
+            <a
+              href="#"
+              onClick={() => setMenuOpen(false)}
+              style={menuItemStyle("var(--text)")}
+            >
+              Services
+            </a>
+            <Link
+              href={contactsHref}
+              onClick={smoothScroll("contacts")}
+              style={menuItemStyle("var(--text)")}
+            >
+              Contacts
+            </Link>
+          </div>
+        </>
       )}
-    </header>
+    </>
   );
-}
-
-function barStyle(bg: string): React.CSSProperties {
-  return { display: "block", height: 2, width: "100%", background: bg };
-}
-
-function mobileItem(color: string, border: boolean): React.CSSProperties {
-  return {
-    color,
-    textDecoration: "none",
-    fontSize: 15,
-    padding: "14px 0",
-    borderBottom: border ? "1px solid rgba(255,255,255,0.1)" : "none",
-  };
 }
