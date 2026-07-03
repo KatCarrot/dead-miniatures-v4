@@ -5,6 +5,13 @@ import { useRef, useState } from "react";
 import { CATEGORY_TABS } from "@/config/categories";
 import { supabase } from "@/lib/supabaseClient";
 import { ARTWORK_BUCKET } from "@/lib/artworkBucket";
+import { ARTWORK_VIDEO_BUCKET, MAX_VIDEO_BYTES, ALLOWED_VIDEO_MIME_TYPES } from "@/lib/videoBucket";
+import { uploadResumable } from "@/lib/tusUpload";
+
+function formatBytes(n: number): string {
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -37,6 +44,33 @@ export default function AdminForm() {
   const [message, setMessage] = useState("");
   const [coverName, setCoverName] = useState("");
   const [extrasCount, setExtrasCount] = useState(0);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoError, setVideoError] = useState("");
+  const [videoProgress, setVideoProgress] = useState<number | null>(null);
+
+  function pickVideo(files: File[]) {
+    const file = files[0];
+    if (!file) return;
+    setVideoError("");
+    setVideoProgress(null);
+    if (!(ALLOWED_VIDEO_MIME_TYPES as readonly string[]).includes(file.type)) {
+      setVideoError("Only MP4 or WebM video files are allowed");
+      setVideoFile(null);
+      return;
+    }
+    if (file.size > MAX_VIDEO_BYTES) {
+      setVideoError(`Video exceeds the ${(MAX_VIDEO_BYTES / (1024 * 1024)).toFixed(0)}MB limit`);
+      setVideoFile(null);
+      return;
+    }
+    setVideoFile(file);
+  }
+
+  function removeVideo() {
+    setVideoFile(null);
+    setVideoError("");
+    setVideoProgress(null);
+  }
 
   // Uploads one file straight from the browser to Supabase Storage using a
   // signed URL minted by our server, and returns its public URL. This keeps
@@ -65,6 +99,41 @@ export default function AdminForm() {
     return signed.publicUrl as string;
   }
 
+  // Uploads the (optional) video straight from the browser to Supabase
+  // Storage over a resumable TUS transfer, authorized by a signed token from
+  // our own server (never the anon key alone). Progress drives the bar shown
+  // under the video field.
+  async function uploadVideoDirect(
+    file: File
+  ): Promise<{ video_url: string; video_path: string; video_mime_type: string }> {
+    const signRes = await fetch("/api/artworks/video-upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename: file.name,
+        contentType: file.type,
+        size: file.size,
+      }),
+    });
+    const signed = await signRes.json();
+    if (!signRes.ok) throw new Error(signed.error || "Could not get video upload URL");
+
+    setVideoProgress(0);
+    await uploadResumable({
+      file,
+      bucket: signed.bucket ?? ARTWORK_VIDEO_BUCKET,
+      path: signed.path,
+      token: signed.token,
+      onProgress: setVideoProgress,
+    });
+
+    return {
+      video_url: signed.publicUrl as string,
+      video_path: signed.path as string,
+      video_mime_type: file.type,
+    };
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formEl = e.currentTarget;
@@ -81,9 +150,12 @@ export default function AdminForm() {
         .getAll("extras")
         .filter((f): f is File => f instanceof File && f.size > 0);
 
-      const [image_url, extra_images] = await Promise.all([
+      if (videoError) throw new Error(videoError);
+
+      const [image_url, extra_images, videoResult] = await Promise.all([
         uploadDirect(cover),
         Promise.all(extras.map(uploadDirect)),
+        videoFile ? uploadVideoDirect(videoFile) : Promise.resolve(null),
       ]);
 
       const res = await fetch("/api/artworks", {
@@ -100,6 +172,9 @@ export default function AdminForm() {
           description: formData.get("description"),
           image_url,
           extra_images,
+          video_url: videoResult?.video_url ?? null,
+          video_path: videoResult?.video_path ?? null,
+          video_mime_type: videoResult?.video_mime_type ?? null,
         }),
       });
       const data = await res.json();
@@ -110,6 +185,7 @@ export default function AdminForm() {
       formEl.reset();
       setCoverName("");
       setExtrasCount(0);
+      removeVideo();
       router.refresh();
     } catch (err) {
       setStatus("error");
@@ -289,6 +365,65 @@ export default function AdminForm() {
             onChange={(e) => setExtrasCount(e.target.files?.length ?? 0)}
           />
         </FilePicker>
+      </div>
+
+      {/* video (optional) */}
+      <div>
+        <label style={labelStyle}>Video (optional)</label>
+        <FilePicker
+          label={
+            videoFile
+              ? `${videoFile.name} (${formatBytes(videoFile.size)})`
+              : "Choose a video — MP4 or WebM, up to 50MB…"
+          }
+          onPick={pickVideo}
+        >
+          <input
+            type="file"
+            name="video"
+            accept="video/mp4,video/webm"
+            style={fileInputHidden}
+            onChange={(e) => pickVideo(Array.from(e.target.files ?? []))}
+          />
+        </FilePicker>
+        {videoFile && (
+          <button
+            type="button"
+            onClick={removeVideo}
+            style={{
+              marginTop: 8,
+              background: "transparent",
+              border: "none",
+              color: "var(--text-dim)",
+              fontSize: 13,
+              cursor: "pointer",
+              textDecoration: "underline",
+              padding: 0,
+            }}
+          >
+            Remove video
+          </button>
+        )}
+        {videoError && (
+          <div style={{ marginTop: 8, fontSize: 13, color: "#ff6b6b" }}>{videoError}</div>
+        )}
+        {videoProgress != null && status === "submitting" && (
+          <div style={{ marginTop: 10 }}>
+            <div style={{ height: 6, background: "var(--inset)", overflow: "hidden" }}>
+              <div
+                style={{
+                  height: "100%",
+                  width: `${videoProgress}%`,
+                  background: "var(--accent)",
+                  transition: "width .15s linear",
+                }}
+              />
+            </div>
+            <div style={{ marginTop: 4, fontSize: 12, color: "var(--text-dim)" }}>
+              Uploading video… {videoProgress}%
+            </div>
+          </div>
+        )}
       </div>
 
       {/* submit */}

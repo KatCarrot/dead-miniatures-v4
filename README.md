@@ -34,7 +34,9 @@ app/
   admin/page.tsx         /admin  — new-artwork form (guarded)
   admin/AdminForm.tsx    the form UI (client)
   api/auth/[...nextauth]/route.ts   Auth.js handlers
-  api/artworks/route.ts  POST — session-guarded insert + image upload
+  api/artworks/route.ts  POST — session-guarded insert (images/video already uploaded to Storage)
+  api/artworks/upload-url/route.ts        POST — signed upload URL for cover/extra images
+  api/artworks/video-upload-url/route.ts  POST — signed resumable (TUS) upload slot for video
   not-found.tsx          themed 404
 auth.ts                  Auth.js config: Google + admin email allowlist
 middleware.ts            protects /admin/*
@@ -48,6 +50,9 @@ lib/
   supabaseClient.ts      anon read client (public site)
   supabaseAdmin.ts       service-role client (SERVER ONLY — admin writes)
   queries.ts             getLatestArtworks / getArtworks / getArtwork
+  artworkBucket.ts       artwork-images bucket name (shared client/server)
+  videoBucket.ts         artwork-videos bucket name + size/MIME limits (shared)
+  tusUpload.ts           browser-side resumable (TUS) upload helper for video
 config/
   categories.ts          category keys + labels (single source)
 types/
@@ -56,6 +61,8 @@ sql/
   setup.sql              tables + seed + public-read RLS — run once
   admin.sql              storage bucket + policies for the admin panel
   policies.sql           RLS read policy on its own (if tables already exist)
+  video-migration.sql    adds video_url/video_path/video_mime_type + the
+                         artwork-videos bucket — review before running
 public/
   brand/                 logo, hero/quote backgrounds, scratch textures
   icons/                 mail / instagram / youtube glyphs
@@ -188,4 +195,32 @@ showcase immediately.
 > Signing in never requires being on the allowlist. Accounts not in
 > `ADMIN_GOOGLE_SUBS` can still authenticate but are redirected away from
 > `/admin` and rejected by the write API.
+
+### Video uploads
+
+Each artwork can optionally have one video (MP4 or WebM, up to 50MB), shown
+on `/artwork/[id]` as the first item in the media viewer, with the cover
+image as its poster frame.
+
+**Why it's a separate upload path from images:** images are small enough to
+`PUT` in one shot to a signed Storage URL. Videos are not — they're uploaded
+resumably over TUS (chunked, with progress, resilient to a dropped
+connection), straight from the browser to Supabase Storage, using a
+short-lived signed token from `POST /api/artworks/video-upload-url`. No
+video bytes ever pass through a Next.js/Vercel function, so there's no
+request-body size limit to hit no matter how big the file (short of the 50MB
+cap, which is enforced independently in three places: the browser before
+upload starts, the signed-URL route, and the Storage bucket's own
+`file_size_limit`/`allowed_mime_types` — see `sql/video-migration.sql`).
+
+**One-time setup:**
+
+1. **Review, then run `sql/video-migration.sql`** in the Supabase SQL editor
+   — adds the three nullable `video_*` columns to `artworks` and creates the
+   public-read `artwork-videos` storage bucket (writes stay locked down to
+   the signed-token flow, same model as `artwork-images`).
+2. `npm install` — pulls in `tus-js-client`, used for the resumable upload.
+
+No other config needed; the video field on `/admin` is optional, and
+artworks without one render exactly as before.
 

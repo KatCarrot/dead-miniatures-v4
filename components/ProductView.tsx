@@ -25,7 +25,9 @@ export default function ProductView({
   const [lightbox, setLightbox] = useState(false);
 
   const media = [
-    { type: "video" as const, src: imgSrc(artwork.image_url) },
+    ...(artwork.video_url
+      ? [{ type: "video" as const, src: artwork.video_url }]
+      : []),
     { type: "image" as const, src: imgSrc(artwork.image_url) },
     ...(artwork.extra_images || []).map((s) => ({
       type: "image" as const,
@@ -237,7 +239,9 @@ export default function ProductView({
                       i === idx
                         ? "2px solid var(--accent)"
                         : "2px solid transparent",
-                    backgroundImage: `url('${item.src}')`,
+                    backgroundImage: `url('${
+                      item.type === "video" ? imgSrc(artwork.image_url) : item.src
+                    }')`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundColor: "var(--bg-deep)",
@@ -303,55 +307,39 @@ export default function ProductView({
                     }
               }
             >
-              <div
-                onClick={() => {
-                  if (current.type === "image") setLightbox(true);
-                }}
-                style={{
-                  width: "100%",
-                  height: m ? "auto" : "100%",
-                  minHeight: m ? 280 : undefined,
-                  aspectRatio: m ? "4 / 3" : undefined,
-                  backgroundImage: `url('${current.src}')`,
-                  backgroundSize: "contain",
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat",
-                  cursor: "zoom-in",
-                }}
-              />
-              {current.type === "video" && (
-                <button
-                  aria-label="Play video"
+              {current.type === "video" ? (
+                <video
+                  key={current.src}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster={imgSrc(artwork.image_url)}
+                  src={current.src}
                   style={{
-                    position: "absolute",
-                    left: "50%",
-                    top: "50%",
-                    transform: "translate(-50%,-50%)",
-                    width: 74,
-                    height: 74,
-                    borderRadius: "50%",
-                    border: "none",
-                    background: "rgba(5,5,5,0.45)",
-                    backdropFilter: "blur(2px)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
+                    width: "100%",
+                    height: m ? "auto" : "100%",
+                    minHeight: m ? 280 : undefined,
+                    maxHeight: "100%",
+                    aspectRatio: m ? "4 / 3" : undefined,
+                    background: "var(--bg-deep)",
+                    objectFit: "contain",
                   }}
-                >
-                  <span
-                    style={{
-                      display: "block",
-                      width: 0,
-                      height: 0,
-                      borderStyle: "solid",
-                      borderWidth: "11px 0 11px 18px",
-                      borderColor:
-                        "transparent transparent transparent var(--video)",
-                      marginLeft: 4,
-                    }}
-                  />
-                </button>
+                />
+              ) : (
+                <div
+                  onClick={() => setLightbox(true)}
+                  style={{
+                    width: "100%",
+                    height: m ? "auto" : "100%",
+                    minHeight: m ? 280 : undefined,
+                    aspectRatio: m ? "4 / 3" : undefined,
+                    backgroundImage: `url('${current.src}')`,
+                    backgroundSize: "contain",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    cursor: "zoom-in",
+                  }}
+                />
               )}
               {showNav && (
                 <>

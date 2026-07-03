@@ -27,6 +27,10 @@ export interface Artwork {
   description: string | null;
   image_url: string | null;
   extra_images: string[] | null;
+  /** Optional artwork video — all three are set together, or all null. */
+  video_url: string | null;
+  video_path: string | null;
+  video_mime_type: string | null;
 }
 
 /** Trimmed shape used for cards/grids (no heavy columns). */
