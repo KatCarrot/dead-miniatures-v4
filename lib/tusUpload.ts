@@ -36,13 +36,13 @@ export function uploadResumable(opts: {
       endpoint: resumableEndpoint(),
       retryDelays: [0, 3000, 5000, 10000, 20000],
       headers: {
-        // The anon key establishes the base (anon) role for the request;
-        // x-signature is what actually authorizes this specific upload,
-        // overriding storage.objects RLS for this path only. Without the
-        // authorization header present, Storage falls back to plain anon
-        // auth and the (intentionally locked-down, no anon-insert) RLS
-        // policy on the bucket rejects the write with a 403.
-        authorization: `Bearer ${ANON_KEY}`,
+        // Per Supabase's documented presigned-resumable-upload flow: the
+        // signed token goes ONLY in x-signature. It is NOT a bearer/session
+        // token, so it must not be sent as `authorization`. `apikey` is the
+        // public anon key, required by the API gateway for routing — it
+        // grants no write access on its own; the write is authorized solely
+        // by possessing a valid, single-use x-signature token that only the
+        // admin-gated /api/artworks/video-upload-url route ever mints.
         apikey: ANON_KEY,
         "x-signature": token,
       },
@@ -55,7 +55,17 @@ export function uploadResumable(opts: {
         cacheControl: "3600",
       },
       chunkSize: 6 * 1024 * 1024, // required to be 6MB by Supabase Storage
-      onError: (error) => reject(error instanceof Error ? error : new Error(String(error))),
+      onError: (error) => {
+        // Surface the Storage server's response body (safe — it's just a
+        // JSON error like {statusCode, error, message}, never a token or
+        // key) so the admin form can show something actionable instead of
+        // a bare "tus: unexpected response" string.
+        let message = error instanceof Error ? error.message : String(error);
+        const body = (error as { originalResponse?: { getBody?: () => string } })
+          ?.originalResponse?.getBody?.();
+        if (body) message += ` — response body: ${body}`;
+        reject(new Error(message));
+      },
       onProgress: (bytesUploaded, bytesTotal) => {
         onProgress?.(Math.round((bytesUploaded / bytesTotal) * 100));
       },

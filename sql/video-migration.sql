@@ -42,8 +42,14 @@ create policy "Public read artwork videos"
   on storage.objects for select to anon, authenticated
   using (bucket_id = 'artwork-videos');
 
--- ...but there is intentionally NO anon/authenticated INSERT/UPDATE/DELETE
--- policy — all writes go through the signed-upload-token flow above.
+-- ...there is intentionally NO anon/authenticated INSERT/UPDATE/DELETE
+-- policy. Writes are authorized solely by possessing a valid, single-use
+-- signed token (x-signature) minted by the admin-gated
+-- /api/artworks/video-upload-url route via createSignedUploadUrl with the
+-- service-role key — never by the anon role generally. Opening a
+-- bucket-wide anon INSERT/UPDATE policy would let anyone holding the public
+-- anon key write or overwrite objects directly, with no admin session and
+-- no token — that is NOT an acceptable trade-off, so it is not done here.
 
 -- Done. The admin form at /admin can now attach an optional video per piece,
 -- and /artwork/[id] will render it when present.
