@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { CATEGORY_TABS } from "@/config/categories";
@@ -42,6 +43,7 @@ export default function AdminForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  const [publishedId, setPublishedId] = useState<number | null>(null);
   const [coverName, setCoverName] = useState("");
   const [extrasCount, setExtrasCount] = useState(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -139,6 +141,7 @@ export default function AdminForm() {
     const formEl = e.currentTarget;
     setStatus("submitting");
     setMessage("");
+    setPublishedId(null);
 
     try {
       const formData = new FormData(formEl);
@@ -182,6 +185,7 @@ export default function AdminForm() {
 
       setStatus("success");
       setMessage(`Published! New piece added (#${data.id}).`);
+      setPublishedId(typeof data.id === "number" ? data.id : null);
       formEl.reset();
       setCoverName("");
       setExtrasCount(0);
@@ -458,11 +462,27 @@ export default function AdminForm() {
         {message && (
           <span
             style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 14,
               fontSize: 14,
               color: status === "error" ? "#ff6b6b" : "var(--accent)",
             }}
           >
             {message}
+            {status === "success" && publishedId != null && (
+              <Link
+                href={`/artwork/${publishedId}`}
+                style={{
+                  color: "var(--accent)",
+                  textDecoration: "underline",
+                  textUnderlineOffset: 3,
+                  fontWeight: 500,
+                }}
+              >
+                View published page →
+              </Link>
+            )}
           </span>
         )}
       </div>
