@@ -7,11 +7,18 @@ const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
  * Supabase's resumable (TUS) upload endpoint lives on the dedicated storage
  * subdomain for better throughput on large files:
  *   https://<project-ref>.supabase.co  ->  https://<project-ref>.storage.supabase.co
+ *
+ * NOTE the `/sign` suffix. This is the PRESIGNED resumable endpoint: it
+ * authorizes each request by validating the `x-signature` token (scoped to
+ * one bucket + object path) and performs the write itself — it does NOT run
+ * the insert as the caller's anon role, so no storage.objects INSERT policy
+ * is needed. The plain `/upload/resumable` endpoint (no `/sign`) would
+ * authenticate as anon and be blocked by RLS — that was the 403 we hit.
  */
 function resumableEndpoint(): string {
   const { hostname } = new URL(SUPABASE_URL);
   const projectRef = hostname.split(".")[0];
-  return `https://${projectRef}.storage.supabase.co/storage/v1/upload/resumable`;
+  return `https://${projectRef}.storage.supabase.co/storage/v1/upload/resumable/sign`;
 }
 
 /**
@@ -35,24 +42,18 @@ export function uploadResumable(opts: {
       endpoint: resumableEndpoint(),
       retryDelays: [0, 3000, 5000, 10000, 20000],
       headers: {
-        // Three distinct things here, none of them a stand-in for one
-        // another:
-        //   - `authorization` / `apikey`: the PUBLIC anon key. Required by
-        //     the API gateway to accept the request at all. This is not a
-        //     user session and grants no storage.objects write on its own
-        //     — there is deliberately no anon INSERT/UPDATE policy on this
-        //     bucket, so possessing the anon key alone cannot write here.
-        //   - `x-signature`: the actual write authorization — a
-        //     short-lived, single-use signed token minted server-side by
-        //     the admin-gated /api/artworks/video-upload-url route via
-        //     createSignedUploadUrl (service-role key). THIS is what
-        //     permits the write, scoped to exactly this one object path —
-        //     never the anon key, and the signed token itself must never
-        //     be sent as the `authorization` bearer (that's a different,
-        //     unrelated credential slot and Storage will reject the
-        //     request — "Invalid Compact JWS" — if authorization is
-        //     missing or not a well-formed key).
-        authorization: `Bearer ${ANON_KEY}`,
+        // The PRESIGNED resumable endpoint (`/upload/resumable/sign`) takes
+        // exactly two things:
+        //   - `apikey`: the PUBLIC anon key, so the API gateway accepts the
+        //     request. It is NOT the write authorization — there is
+        //     deliberately no anon INSERT policy on this bucket. Do NOT add
+        //     an `authorization: Bearer` header here: that makes Storage
+        //     authenticate as the anon role and run the insert under RLS
+        //     (→ 403 "new row violates row-level security policy").
+        //   - `x-signature`: the actual write authorization. A short-lived,
+        //     single-use token minted server-side by the admin-gated
+        //     /api/artworks/video-upload-url route via createSignedUploadUrl
+        //     (service-role key), scoped to this one bucket + object path.
         apikey: ANON_KEY,
         "x-signature": token,
       },
