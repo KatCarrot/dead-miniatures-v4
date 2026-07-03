@@ -36,8 +36,15 @@ export function uploadResumable(opts: {
       endpoint: resumableEndpoint(),
       retryDelays: [0, 3000, 5000, 10000, 20000],
       headers: {
-        "x-signature": token,
+        // The anon key establishes the base (anon) role for the request;
+        // x-signature is what actually authorizes this specific upload,
+        // overriding storage.objects RLS for this path only. Without the
+        // authorization header present, Storage falls back to plain anon
+        // auth and the (intentionally locked-down, no anon-insert) RLS
+        // policy on the bucket rejects the write with a 403.
+        authorization: `Bearer ${ANON_KEY}`,
         apikey: ANON_KEY,
+        "x-signature": token,
       },
       uploadDataDuringCreation: true,
       removeFingerprintOnSuccess: true,
