@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HEADER_CATEGORIES } from "@/config/categories";
 
 type Props = {
@@ -38,6 +38,17 @@ export default function SiteHeader({ variant = "inner" }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [headerH, setHeaderH] = useState(84);
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const measure = () => {
+      if (headerRef.current) setHeaderH(headerRef.current.offsetHeight);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [mobile]);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 900px)");
@@ -87,10 +98,11 @@ export default function SiteHeader({ variant = "inner" }: Props) {
   return (
     <>
     <header
+      ref={headerRef}
       style={{
         position: "sticky",
         top: 0,
-        zIndex: menuOpen ? 61 : 50,
+        zIndex: menuOpen ? 63 : 50,
         background: scrolled ? "rgba(25,32,34,0.4)" : "transparent",
         backdropFilter: scrolled ? "blur(18px)" : "none",
         WebkitBackdropFilter: scrolled ? "blur(18px)" : "none",
@@ -273,7 +285,10 @@ export default function SiteHeader({ variant = "inner" }: Props) {
             onClick={() => setMenuOpen(false)}
             style={{
               position: "fixed",
-              inset: 0,
+              top: headerH,
+              left: 0,
+              right: 0,
+              bottom: 0,
               background: "rgba(0,0,0,0.55)",
               zIndex: 61,
             }}
@@ -281,7 +296,7 @@ export default function SiteHeader({ variant = "inner" }: Props) {
           <div
             style={{
               position: "fixed",
-              top: 0,
+              top: headerH,
               right: 0,
               bottom: 0,
               width: "80%",
