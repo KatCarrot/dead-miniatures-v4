@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { CATEGORY_TABS } from "@/config/categories";
+import { supabase } from "@/lib/supabaseClient";
+import { ARTWORK_BUCKET } from "@/lib/artworkBucket";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -36,6 +38,33 @@ export default function AdminForm() {
   const [coverName, setCoverName] = useState("");
   const [extrasCount, setExtrasCount] = useState(0);
 
+  // Uploads one file straight from the browser to Supabase Storage using a
+  // signed URL minted by our server, and returns its public URL. This keeps
+  // image bytes off our own serverless function — the previous version sent
+  // the whole multipart body (including full-size photos) through
+  // /api/artworks, which hit the platform's request size limit and failed
+  // with "413 Payload Too Large" on anything but tiny images.
+  async function uploadDirect(file: File): Promise<string> {
+    const signRes = await fetch("/api/artworks/upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name }),
+    });
+    const signed = await signRes.json();
+    if (!signRes.ok) {
+      throw new Error(signed.error || `Could not get upload URL for ${file.name}`);
+    }
+
+    const { error } = await supabase.storage
+      .from(ARTWORK_BUCKET)
+      .uploadToSignedUrl(signed.path, signed.token, file, {
+        contentType: file.type || "image/png",
+      });
+    if (error) throw new Error(`Upload failed (${file.name}): ${error.message}`);
+
+    return signed.publicUrl as string;
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formEl = e.currentTarget;
@@ -43,9 +72,35 @@ export default function AdminForm() {
     setMessage("");
 
     try {
+      const formData = new FormData(formEl);
+      const cover = formData.get("cover");
+      if (!(cover instanceof File) || cover.size === 0) {
+        throw new Error("A cover image is required");
+      }
+      const extras = formData
+        .getAll("extras")
+        .filter((f): f is File => f instanceof File && f.size > 0);
+
+      const [image_url, extra_images] = await Promise.all([
+        uploadDirect(cover),
+        Promise.all(extras.map(uploadDirect)),
+      ]);
+
       const res = await fetch("/api/artworks", {
         method: "POST",
-        body: new FormData(formEl),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.get("name"),
+          category: formData.get("category"),
+          status: formData.get("status"),
+          sculptor: formData.get("sculptor"),
+          scale: formData.get("scale"),
+          game_system: formData.get("game_system"),
+          time_hours: formData.get("time_hours"),
+          description: formData.get("description"),
+          image_url,
+          extra_images,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");

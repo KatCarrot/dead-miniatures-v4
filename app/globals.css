@@ -53,10 +53,21 @@
   box-sizing: border-box;
 }
 
+html {
+  /* clip stray horizontal overflow (e.g. the 130%-wide hero logo) so no
+     blank strip appears on the right/top of small screens */
+  overflow-x: clip;
+  /* always reserve the vertical scrollbar so content crossing the viewport
+     height doesn't change the width and cause layout flicker (~600px) */
+  overflow-y: scroll;
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
+  max-width: 100%;
+  overflow-x: clip;
   background: var(--bg);
   color: var(--text);
   scroll-behavior: smooth;

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+export { ARTWORK_BUCKET } from "./artworkBucket";
 
 /**
  * Service-role Supabase client — SERVER ONLY.
@@ -24,6 +25,3 @@ if (!url || !serviceKey) {
 export const supabaseAdmin = createClient(url, serviceKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
-
-/** Storage bucket that holds uploaded artwork photos (create it as public). */
-export const ARTWORK_BUCKET = "artwork-images";

@@ -48,6 +48,7 @@ export default function HomeView() {
   const [showcaseStacked, setShowcaseStacked] = useState(false);
   const [quoteStacked, setQuoteStacked] = useState(false);
   const [contactWrapped, setContactWrapped] = useState(false);
+  const [headerH, setHeaderH] = useState(84);
 
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const quoteMeasureRef = useRef<HTMLDivElement | null>(null);
@@ -83,6 +84,17 @@ export default function HomeView() {
     return () => mq.removeEventListener("change", onMQ);
   }, []);
 
+  // --- measure sticky header height (hero pulls up under it) ---
+  useEffect(() => {
+    const measure = () => {
+      const header = document.querySelector("header");
+      if (header) setHeaderH((header as HTMLElement).offsetHeight);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [mobile]);
+
   // --- showcase tab-list truncation -> stack list above photos ---
   useEffect(() => {
     const check = () => {
@@ -104,7 +116,7 @@ export default function HomeView() {
       window.removeEventListener("resize", onResize);
       clearTimeout(t);
     };
-  });
+  }, [mobile]);
 
   // --- quote section: absolute layout doesn't fit -> stacked column layout ---
   useEffect(() => {
@@ -122,7 +134,7 @@ export default function HomeView() {
       window.removeEventListener("resize", onResize);
       clearTimeout(t);
     };
-  });
+  }, [mobile]);
 
   // --- contacts row: 3rd column wraps to its own row when space runs out ---
   useEffect(() => {
@@ -152,7 +164,7 @@ export default function HomeView() {
       window.removeEventListener("resize", onResize);
       clearTimeout(t);
     };
-  });
+  }, [mobile]);
 
   const m = mobile;
   const cat = ppCat;
@@ -168,9 +180,12 @@ export default function HomeView() {
         style={{
           position: "relative",
           zIndex: 1,
-          minHeight: m ? 660 : 900,
-          marginTop: m ? 0 : -128,
-          paddingTop: m ? 0 : 128,
+          display: m ? "flex" : "block",
+          flexDirection: m ? "column" : undefined,
+          minHeight: m ? undefined : "clamp(620px, 100vh, 900px)",
+          marginTop: -headerH,
+          paddingTop: headerH + (m ? 24 : 0),
+          paddingBottom: m ? 0 : undefined,
           backgroundImage: "url('/brand/hero-bg-opt.png')",
           backgroundSize: "cover",
           width: "100%",
@@ -213,16 +228,15 @@ export default function HomeView() {
           style={
             m
               ? {
-                  position: "absolute",
-                  right: 0,
-                  bottom: 0,
-                  width: "80%",
+                  position: "relative",
+                  order: 2,
+                  width: "100%",
+                  aspectRatio: "860 / 767",
                   backgroundImage: "url('/samples/hero-fig-opt.png')",
                   backgroundSize: "contain",
-                  backgroundPosition: "right bottom",
+                  backgroundPosition: "center bottom",
                   backgroundRepeat: "no-repeat",
-                  aspectRatio: "1 / 1",
-                  zIndex: 3,
+                  zIndex: 1,
                   pointerEvents: "none",
                 }
               : {
@@ -235,7 +249,7 @@ export default function HomeView() {
                   backgroundSize: "contain",
                   backgroundPosition: "right bottom",
                   backgroundRepeat: "no-repeat",
-                  zIndex: 3,
+                  zIndex: 2,
                   pointerEvents: "none",
                 }
           }
@@ -243,11 +257,12 @@ export default function HomeView() {
         <div
           style={{
             position: m ? "relative" : "absolute",
-            zIndex: 1,
+            zIndex: 4,
+            order: m ? 1 : undefined,
             left: m ? "auto" : "clamp(20px,6vw,145px)",
-            bottom: m ? "auto" : 80,
-            maxWidth: 620,
-            padding: m ? "150px clamp(20px,6vw,40px) 80px" : 0,
+            bottom: m ? "auto" : "clamp(28px, 7vh, 80px)",
+            maxWidth: m ? 620 : "min(620px, 47vw)",
+            padding: m ? "0 clamp(20px,6vw,40px) 32px" : 0,
           }}
         >
           <h1
@@ -1201,7 +1216,7 @@ function contactIcon(
   right: number,
   wrapped: boolean
 ): React.CSSProperties {
-  const size = wrapped ? 70 : 105;
+  const size = wrapped ? "70px" : "clamp(64px, 14vw, 105px)";
   return {
     position: "absolute",
     zIndex: -1,
