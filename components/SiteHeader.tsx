@@ -25,11 +25,10 @@ function menuItemStyle(color: string): React.CSSProperties {
   return {
     color,
     textDecoration: "none",
-    fontSize: 17,
+    fontSize: 26,
     fontFamily: "var(--font-sf)",
     textTransform: "uppercase",
     letterSpacing: "0.04em",
-    padding: "10px 0",
   };
 }
 
@@ -103,10 +102,10 @@ export default function SiteHeader({ variant = "inner" }: Props) {
         position: "sticky",
         top: 0,
         zIndex: menuOpen ? 63 : 50,
-        background: scrolled ? "rgba(25,32,34,0.4)" : "transparent",
-        backdropFilter: scrolled ? "blur(18px)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(18px)" : "none",
-        boxShadow: scrolled ? "0 1px 0 rgba(255,255,255,0.08)" : "none",
+        background: menuOpen ? "transparent" : (scrolled ? "rgba(25,32,34,0.4)" : "transparent"),
+        backdropFilter: menuOpen ? "none" : (scrolled ? "blur(18px)" : "none"),
+        WebkitBackdropFilter: menuOpen ? "none" : (scrolled ? "blur(18px)" : "none"),
+        boxShadow: (menuOpen || !scrolled) ? "none" : "0 1px 0 rgba(255,255,255,0.08)",
         transition: "background .25s ease, box-shadow .25s ease",
       }}
     >
@@ -280,105 +279,80 @@ export default function SiteHeader({ variant = "inner" }: Props) {
     </header>
 
       {menuOpen && (
-        <>
-          <div
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100%",
+            background: "var(--card)",
+            zIndex: 62,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 34,
+            padding: `${headerH + 32}px 24px 48px`,
+            overflowY: "auto",
+          }}
+        >
+          <Link
+            href="/showcase"
             onClick={() => setMenuOpen(false)}
-            style={{
-              position: "fixed",
-              top: headerH,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "rgba(0,0,0,0.55)",
-              zIndex: 61,
-            }}
-          />
+            style={menuItemStyle("var(--text)")}
+          >
+            Miniatures
+          </Link>
           <div
             style={{
-              position: "fixed",
-              top: headerH,
-              right: 0,
-              bottom: 0,
-              width: "80%",
-              maxWidth: 340,
-              background: "var(--card)",
-              zIndex: 62,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 6,
-              padding: "32px 24px 40px",
-              overflowY: "auto",
-              boxShadow: "-4px 0 32px rgba(0,0,0,0.5)",
+              gap: 34,
             }}
           >
-            <div
-              style={{
-                width: 110,
-                height: 96,
-                background:
-                  "url('/brand/dead-logo.png') center/contain no-repeat",
-                marginBottom: 20,
-              }}
-            />
-            <Link
-              href="/showcase"
-              onClick={() => setMenuOpen(false)}
-              style={menuItemStyle("var(--text)")}
-            >
-              Miniatures
-            </Link>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 8,
-                margin: "2px 0 14px",
-              }}
-            >
-              {HEADER_CATEGORIES.map((c) => (
-                <Link
-                  key={c.key}
-                  href={`/showcase#${c.key}`}
-                  onClick={() => setMenuOpen(false)}
-                  style={{
-                    color: "var(--text-dim)",
-                    textDecoration: "none",
-                    fontSize: 17,
-                    fontFamily: "var(--font-sf)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.03em",
-                    padding: "5px 0",
-                  }}
-                >
-                  {c.label}
-                </Link>
-              ))}
-            </div>
-            <Link
-              href={aboutHref}
-              onClick={smoothScroll("about")}
-              style={menuItemStyle("var(--text)")}
-            >
-              About me
-            </Link>
-            <a
-              href="#"
-              onClick={() => setMenuOpen(false)}
-              style={menuItemStyle("var(--text)")}
-            >
-              Services
-            </a>
-            <Link
-              href={contactsHref}
-              onClick={smoothScroll("contacts")}
-              style={menuItemStyle("var(--text)")}
-            >
-              Contacts
-            </Link>
+            {HEADER_CATEGORIES.map((c) => (
+              <Link
+                key={c.key}
+                href={`/showcase#${c.key}`}
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  color: "var(--text-dim)",
+                  textDecoration: "none",
+                  fontSize: 26,
+                  fontFamily: "var(--font-sf)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em",
+                }}
+              >
+                {c.label}
+              </Link>
+            ))}
           </div>
-        </>
+          <Link
+            href={aboutHref}
+            onClick={smoothScroll("about")}
+            style={menuItemStyle("var(--text)")}
+          >
+            About me
+          </Link>
+          <a
+            href="#"
+            onClick={() => setMenuOpen(false)}
+            style={menuItemStyle("var(--text)")}
+          >
+            Services
+          </a>
+          <Link
+            href={contactsHref}
+            onClick={smoothScroll("contacts")}
+            style={menuItemStyle("var(--text)")}
+          >
+            Contacts
+          </Link>
+        </div>
       )}
     </>
   );

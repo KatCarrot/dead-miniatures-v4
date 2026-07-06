@@ -15,7 +15,6 @@ export default function HomePage() {
         fontFamily: "var(--font-sf)",
       }}
     >
-      {/* global scratch texture */}
       <div
         style={{
           position: "absolute",
