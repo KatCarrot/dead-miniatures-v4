@@ -32,15 +32,47 @@ const adminGoogleSubs = (process.env.ADMIN_GOOGLE_SUBS ?? "")
   .map((s) => s.trim())
   .filter(Boolean);
 
+// Optional second allowlist, by Google account email. Only ever matched
+// against a Google-VERIFIED email (email_verified === true), so an
+// unverified or spoofed address can never gain admin. `sub` remains the
+// more robust key (emails can change or be reassigned), but email is far
+// easier to hand out — an account matching EITHER list is an admin.
+const adminGoogleEmails = (process.env.ADMIN_GOOGLE_EMAILS ?? "")
+  .split(",")
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
+
 export function isAdminSub(sub?: string | null): boolean {
   if (!sub) return false;
   return adminGoogleSubs.includes(sub);
+}
+
+export function isAdminEmail(
+  email?: string | null,
+  emailVerified?: boolean
+): boolean {
+  if (!email || emailVerified !== true) return false;
+  return adminGoogleEmails.includes(email.toLowerCase());
+}
+
+/** True when a session is admin by EITHER its Google sub or its verified email. */
+export function isAdminSession(session?: {
+  sub?: string | null;
+  emailVerified?: boolean;
+  user?: { email?: string | null } | null;
+} | null): boolean {
+  return (
+    isAdminSub(session?.sub) ||
+    isAdminEmail(session?.user?.email, session?.emailVerified)
+  );
 }
 
 declare module "next-auth" {
   interface Session {
     /** Verified Google OIDC `sub` for the signed-in user. */
     sub?: string;
+    /** Whether Google reported this account's email as verified. */
+    emailVerified?: boolean;
     isAdmin?: boolean;
   }
 }
@@ -58,18 +90,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn() {
       return true;
     },
-    // Persist the Google OIDC `sub` (stable account id) from the verified
-    // profile onto the JWT at sign-in time.
+    // Persist the Google OIDC `sub` (stable account id) and the verified
+    // email flag from the verified profile onto the JWT at sign-in time.
     async jwt({ token, profile }) {
       if (profile?.sub) token.sub = profile.sub;
+      if (profile) {
+        if (typeof profile.email === "string") token.email = profile.email;
+        if (typeof profile.email_verified === "boolean") {
+          token.email_verified = profile.email_verified;
+        }
+      }
       return token;
     },
-    // Expose only the verified sub + a derived isAdmin flag on the session.
-    // Never attach access tokens, id tokens, or other secrets here.
+    // Expose only the verified sub + verified-email flag + a derived isAdmin
+    // flag on the session. Never attach access tokens, id tokens, or other
+    // secrets here.
     async session({ session, token }) {
       const sub = typeof token.sub === "string" ? token.sub : undefined;
+      const emailVerified = token.email_verified === true;
       session.sub = sub;
-      session.isAdmin = isAdminSub(sub);
+      session.emailVerified = emailVerified;
+      session.isAdmin =
+        isAdminSub(sub) || isAdminEmail(session.user?.email, emailVerified);
       return session;
     },
   },

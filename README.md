@@ -150,9 +150,11 @@ showcase immediately.
   verified Google account can sign in — sign-in itself is never gated.
 - **Allowlist** — admin *privileges* are checked separately, against the
   Google OIDC `sub` (stable account id, not email) in the `ADMIN_GOOGLE_SUBS`
-  env var. This list lives in environment variables (`.env.local` locally,
-  Vercel dashboard in prod) — **never in the committed source**. Read your
-  own sub via `GET /api/whoami` after signing in.
+  env var, and/or against a Google-**verified** email in `ADMIN_GOOGLE_EMAILS`
+  (comma-separated; an account matching either list is an admin). These lists
+  live in environment variables (`.env.local` locally, Vercel dashboard in
+  prod) — **never in the committed source**. Read your own sub via
+  `GET /api/whoami` after signing in.
 - **`middleware.ts`** bounces any unauthenticated hit on `/admin/*` to
   `/login`; `/admin` and the write API route additionally re-check
   `isAdminSub` server-side.

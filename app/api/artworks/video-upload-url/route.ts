@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { auth, isAdminSub } from "@/auth";
+import { auth, isAdminSession } from "@/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   ARTWORK_VIDEO_BUCKET,
@@ -44,7 +44,7 @@ const EXT_BY_MIME: Record<string, string> = {
  */
 export async function POST(req: Request) {
   const session = await auth();
-  if (!isAdminSub(session?.sub)) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { auth, isAdminSub, signOut } from "@/auth";
+import { auth, isAdminSession, signOut } from "@/auth";
 import AdminForm from "./AdminForm";
 
 /**
@@ -9,7 +9,7 @@ import AdminForm from "./AdminForm";
  */
 export default async function AdminPage() {
   const session = await auth();
-  if (!isAdminSub(session?.sub)) redirect("/login");
+  if (!isAdminSession(session)) redirect("/login");
 
   return (
     <main

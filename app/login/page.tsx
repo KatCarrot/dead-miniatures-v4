@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { signIn, auth, isAdminSub } from "@/auth";
+import { signIn, auth, isAdminSession } from "@/auth";
 
 /**
  * Sign-in screen. One button → Google OAuth. Any Google account can sign
@@ -12,7 +12,7 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; callbackUrl?: string }>;
 }) {
   const session = await auth();
-  if (isAdminSub(session?.sub)) redirect("/admin");
+  if (isAdminSession(session)) redirect("/admin");
 
   const { error, callbackUrl } = await searchParams;
 

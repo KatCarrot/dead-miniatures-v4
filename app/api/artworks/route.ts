@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth, isAdminSub } from "@/auth";
+import { auth, isAdminSession } from "@/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { CATEGORIES } from "@/types/artwork";
 import { ARTWORK_VIDEO_BUCKET, ALLOWED_VIDEO_MIME_TYPES } from "@/lib/videoBucket";
@@ -35,7 +35,7 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request) {
   const session = await auth();
-  if (!isAdminSub(session?.sub)) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

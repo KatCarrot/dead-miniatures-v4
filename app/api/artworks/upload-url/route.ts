@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth, isAdminSub } from "@/auth";
+import { auth, isAdminSession } from "@/auth";
 import { supabaseAdmin, ARTWORK_BUCKET } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -19,7 +19,7 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request) {
   const session = await auth();
-  if (!isAdminSub(session?.sub)) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
