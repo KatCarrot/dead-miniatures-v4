@@ -141,8 +141,8 @@ export default function SiteHeader({ variant = "inner" }: Props) {
                       "url('/brand/dead-logo.png') left center/contain no-repeat",
                   }
                 : {
-                    width: 91,
-                    height: 80,
+                    width: 111,
+                    height: 100,
                     background:
                       "url('/brand/dead-logo.png') left center/contain no-repeat",
                   }
