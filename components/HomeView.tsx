@@ -241,7 +241,7 @@ export default function HomeView() {
                 }
               : {
                   position: "absolute",
-                  right: 0,
+                  right: "max(0px, calc((100vw - 1416px) / 2))",
                   bottom: 0,
                   width: 860,
                   height: 793,
@@ -259,7 +259,9 @@ export default function HomeView() {
             position: m ? "relative" : "absolute",
             zIndex: 4,
             order: m ? 1 : undefined,
-            left: m ? "auto" : "clamp(20px,6vw,145px)",
+            left: m
+              ? "auto"
+              : "calc(max(0px, (100vw - 1416px) / 2) + clamp(20px, 6vw, 112px))",
             bottom: m ? "auto" : "clamp(28px, 7vh, 80px)",
             maxWidth: m ? 620 : "min(620px, 47vw)",
             padding: m ? "0 clamp(20px,6vw,40px) 32px" : 0,

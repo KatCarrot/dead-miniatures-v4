@@ -25,7 +25,7 @@ function menuItemStyle(color: string): React.CSSProperties {
   return {
     color,
     textDecoration: "none",
-    fontSize: 26,
+    fontSize: "clamp(16px, 3.4vh, 26px)",
     fontFamily: "var(--font-sf)",
     textTransform: "uppercase",
     letterSpacing: "0.04em",
@@ -102,7 +102,7 @@ export default function SiteHeader({ variant = "inner" }: Props) {
         position: "sticky",
         top: 0,
         zIndex: menuOpen ? 63 : 50,
-        background: menuOpen ? "transparent" : (scrolled ? "rgba(25,32,34,0.4)" : "transparent"),
+        background: menuOpen ? "var(--card)" : (scrolled ? "rgba(25,32,34,0.4)" : "transparent"),
         backdropFilter: menuOpen ? "none" : (scrolled ? "blur(18px)" : "none"),
         WebkitBackdropFilter: menuOpen ? "none" : (scrolled ? "blur(18px)" : "none"),
         boxShadow: (menuOpen || !scrolled) ? "none" : "0 1px 0 rgba(255,255,255,0.08)",
@@ -141,8 +141,8 @@ export default function SiteHeader({ variant = "inner" }: Props) {
                       "url('/brand/dead-logo.png') left center/contain no-repeat",
                   }
                 : {
-                    width: 85,
-                    height: 74,
+                    width: 91,
+                    height: 80,
                     background:
                       "url('/brand/dead-logo.png') left center/contain no-repeat",
                   }
@@ -293,8 +293,8 @@ export default function SiteHeader({ variant = "inner" }: Props) {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: 34,
-            padding: `${headerH + 32}px 24px 48px`,
+            gap: "clamp(8px, 2.2vh, 34px)",
+            padding: `${headerH + 16}px 24px clamp(16px,4vh,48px)`,
             overflowY: "auto",
           }}
         >
@@ -310,7 +310,7 @@ export default function SiteHeader({ variant = "inner" }: Props) {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 34,
+              gap: "clamp(8px, 2.2vh, 34px)",
             }}
           >
             {HEADER_CATEGORIES.map((c) => (
@@ -321,7 +321,7 @@ export default function SiteHeader({ variant = "inner" }: Props) {
                 style={{
                   color: "var(--text-dim)",
                   textDecoration: "none",
-                  fontSize: 26,
+                  fontSize: "clamp(16px, 3.4vh, 26px)",
                   fontFamily: "var(--font-sf)",
                   textTransform: "uppercase",
                   letterSpacing: "0.03em",
