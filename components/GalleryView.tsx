@@ -284,19 +284,27 @@ export default function GalleryView({
                   cursor: "pointer",
                 }}
               >
-                <Image
-                  key={images[idx]}
-                  src={images[idx]}
-                  alt={a.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  priority={cardIndex < 3}
-                  style={{
-                    objectFit: "cover",
-                    transition: "transform .5s ease",
-                    transform: hovered ? "scale(1.04)" : undefined,
-                  }}
-                />
+                {/* All of the card's photos are mounted together (not just
+                    the active one) so flipping through them is instant —
+                    otherwise each swipe would mount a fresh <Image> and the
+                    next photo would only start downloading at that moment. */}
+                {images.map((src, i) => (
+                  <Image
+                    key={`${a.id}-${i}`}
+                    src={src}
+                    alt={a.name}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority={cardIndex < 3 && i === 0}
+                    style={{
+                      objectFit: "cover",
+                      opacity: i === idx ? 1 : 0,
+                      transition: "opacity .25s ease, transform .5s ease",
+                      transform:
+                        i === idx && hovered ? "scale(1.04)" : undefined,
+                    }}
+                  />
+                ))}
                 <div
                   style={{
                     position: "absolute",
