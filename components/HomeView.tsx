@@ -1160,25 +1160,31 @@ export default function HomeView({
                 ...revealStyle(colVisible, 200),
               }}
             >
-              <div className="contact-link" style={contactCard}>
+              <div
+                className="contact-link"
+                onClick={() => {
+                  window.location.href = `mailto:${CONTACT_EMAIL}`;
+                }}
+                style={{ ...contactCard, cursor: "pointer" }}
+              >
                 <span style={contactKicker}>/ WRITE DIRECTLY</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <a
-                    href={`mailto:${CONTACT_EMAIL}`}
+                  <span
                     style={{
                       fontFamily: "var(--font-sf)",
                       fontSize: 16,
                       color: "var(--text)",
-                      textDecoration: "none",
-                      cursor: "default",
                       whiteSpace: "nowrap",
                     }}
                   >
                     {CONTACT_EMAIL}
-                  </a>
+                  </span>
                   <button
                     type="button"
-                    onClick={copyEmail}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyEmail(e);
+                    }}
                     aria-label="Copy email address"
                     className="copy-email-btn"
                     style={{
