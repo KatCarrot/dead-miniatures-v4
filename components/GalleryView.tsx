@@ -4,7 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { imgSrc } from "@/lib/imgSrc";
+import { useInView, revealStyle } from "@/lib/useInView";
 import type { ArtworkCardData } from "@/types/artwork";
+
+type GalleryCardData = {
+  id: number;
+  name: string;
+  category: string;
+  status: string;
+  images: string[];
+};
 
 const CATS = [
   "ALL",
@@ -37,7 +46,6 @@ export default function GalleryView({
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [noHover, setNoHover] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   // touch/tablet devices never fire hover — keep the nav arrows visible there
   // instead of hidden until a mouseenter that will never come.
@@ -173,6 +181,7 @@ export default function GalleryView({
                 onClick={() => setCat(c)}
                 className={active ? undefined : "tab-btn"}
                 style={{
+                  position: "relative",
                   fontFamily: "var(--font-sf)",
                   fontWeight: 400,
                   fontSize: 18,
@@ -183,12 +192,25 @@ export default function GalleryView({
                   padding: "11px 12px",
                   cursor: "pointer",
                   textTransform: "uppercase",
-                  textDecoration: active ? "underline" : "none",
-                  textUnderlineOffset: active ? 8 : undefined,
+                  transition: "color .2s ease",
                 }}
               >
                 {c}
                 <span style={{ opacity: 0.4 }}> / {tabCounts[c]}</span>
+                <span
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    left: 12,
+                    right: 12,
+                    bottom: 6,
+                    height: 2,
+                    background: "var(--accent)",
+                    transform: active ? "scaleX(1)" : "scaleX(0)",
+                    transformOrigin: "center",
+                    transition: "transform .25s ease",
+                  }}
+                />
               </button>
             );
           })}
@@ -233,193 +255,21 @@ export default function GalleryView({
             </div>
           )}
 
-          {filtered.map((a, cardIndex) => {
-            const images = a.images;
-            const total = images.length;
-            const idx = imgIndexes[a.id] || 0;
-            const n = total;
-            const hovered = hoveredCard === a.id;
-            const available = a.status === "available";
-            const changeIdx = (newIdx: number) => {
-              setImgIndexes((s) => ({ ...s, [a.id]: (newIdx + n) % n }));
-            };
-            const setIdx = (newIdx: number, e: React.MouseEvent) => {
-              e.preventDefault();
-              e.stopPropagation();
-              changeIdx(newIdx);
-            };
-            return (
-              <Link
-                key={a.id}
-                href={`/artwork/${a.id}`}
-                className="gallery-card"
-                onMouseEnter={() => setHoveredCard(a.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-                onTouchStart={(e) => {
-                  const t = e.touches[0];
-                  touchStartRef.current = { x: t.clientX, y: t.clientY };
-                }}
-                onTouchEnd={(e) => {
-                  const start = touchStartRef.current;
-                  touchStartRef.current = null;
-                  if (!start || total <= 1) return;
-                  const t = e.changedTouches[0];
-                  const dx = t.clientX - start.x;
-                  const dy = t.clientY - start.y;
-                  // Only hijack the tap when it was clearly a horizontal
-                  // swipe — otherwise let it navigate (tap) or scroll
-                  // (vertical drag) as normal.
-                  if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
-                    e.preventDefault();
-                    changeIdx(dx < 0 ? idx + 1 : idx - 1);
-                  }
-                }}
-                style={{
-                  position: "relative",
-                  display: "block",
-                  aspectRatio: "298/400",
-                  background: "var(--bg-deep)",
-                  overflow: "hidden",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                }}
-              >
-                {/* All of the card's photos are mounted together (not just
-                    the active one) so flipping through them is instant —
-                    otherwise each swipe would mount a fresh <Image> and the
-                    next photo would only start downloading at that moment. */}
-                {images.map((src, i) => (
-                  <Image
-                    key={`${a.id}-${i}`}
-                    src={src}
-                    alt={a.name}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    priority={cardIndex < 3 && i === 0}
-                    style={{
-                      objectFit: "cover",
-                      opacity: i === idx ? 1 : 0,
-                      transition: "opacity .25s ease, transform .5s ease",
-                      transform:
-                        i === idx && hovered ? "scale(1.04)" : undefined,
-                    }}
-                  />
-                ))}
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    height: 120,
-                    background:
-                      "linear-gradient(to top, rgba(7,7,7,0.85), transparent)",
-                    pointerEvents: "none",
-                  }}
-                />
-                {total > 1 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      opacity: hovered || noHover ? 1 : 0,
-                      transition: "opacity 0.2s",
-                      pointerEvents: "none",
-                    }}
-                  >
-                    <button
-                      onClick={(e) => setIdx(idx - 1, e)}
-                      style={arrowBtn}
-                    >
-                      <span
-                        style={{
-                          display: "block",
-                          width: 8,
-                          height: 8,
-                          borderLeft: "2px solid currentColor",
-                          borderBottom: "2px solid currentColor",
-                          transform: "rotate(45deg)",
-                          marginLeft: 4,
-                        }}
-                      />
-                    </button>
-                    <button
-                      onClick={(e) => setIdx(idx + 1, e)}
-                      style={arrowBtn}
-                    >
-                      <span
-                        style={{
-                          display: "block",
-                          width: 8,
-                          height: 8,
-                          borderRight: "2px solid currentColor",
-                          borderTop: "2px solid currentColor",
-                          transform: "rotate(45deg)",
-                          marginRight: 4,
-                        }}
-                      />
-                    </button>
-                  </div>
-                )}
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 16,
-                    bottom: 18,
-                    display: "flex",
-                    gap: 5,
-                  }}
-                >
-                  {Array.from({ length: n }, (_, i) => (
-                    <span
-                      key={i}
-                      style={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: "50%",
-                        background:
-                          i === idx ? "var(--accent)" : "rgba(238,233,219,0.4)",
-                      }}
-                    />
-                  ))}
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    right: 14,
-                    bottom: 16,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "6px 0",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: available ? "var(--available)" : "var(--sold)",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontWeight: 500,
-                      fontSize: 14,
-                      lineHeight: 1,
-                      color: available ? "var(--available)" : "var(--sold)",
-                    }}
-                  >
-                    {available ? "Available" : "Sold"}
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
+          {filtered.map((a, cardIndex) => (
+            <GalleryCard
+              key={a.id}
+              a={a}
+              cardIndex={cardIndex}
+              idx={imgIndexes[a.id] || 0}
+              hovered={hoveredCard === a.id}
+              noHover={noHover}
+              onHoverEnter={() => setHoveredCard(a.id)}
+              onHoverLeave={() => setHoveredCard(null)}
+              onChangeIdx={(finalIdx) =>
+                setImgIndexes((s) => ({ ...s, [a.id]: finalIdx }))
+              }
+            />
+          ))}
         </div>
         {filtered.length === 0 && (
           <div
@@ -435,6 +285,205 @@ export default function GalleryView({
         )}
       </main>
     </div>
+  );
+}
+
+function GalleryCard({
+  a,
+  cardIndex,
+  idx,
+  hovered,
+  noHover,
+  onHoverEnter,
+  onHoverLeave,
+  onChangeIdx,
+}: {
+  a: GalleryCardData;
+  cardIndex: number;
+  idx: number;
+  hovered: boolean;
+  noHover: boolean;
+  onHoverEnter: () => void;
+  onHoverLeave: () => void;
+  onChangeIdx: (finalIdx: number) => void;
+}) {
+  const cardRef = useRef<HTMLAnchorElement | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const visible = useInView(cardRef as React.RefObject<Element | null>);
+
+  const images = a.images;
+  const total = images.length;
+  const available = a.status === "available";
+
+  const changeIdx = (newIdx: number) => {
+    onChangeIdx(((newIdx % total) + total) % total);
+  };
+  const setIdx = (newIdx: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    changeIdx(newIdx);
+  };
+
+  return (
+    <Link
+      ref={cardRef}
+      href={`/artwork/${a.id}`}
+      className="gallery-card"
+      onMouseEnter={onHoverEnter}
+      onMouseLeave={onHoverLeave}
+      onTouchStart={(e) => {
+        const t = e.touches[0];
+        touchStartRef.current = { x: t.clientX, y: t.clientY };
+      }}
+      onTouchEnd={(e) => {
+        const start = touchStartRef.current;
+        touchStartRef.current = null;
+        if (!start || total <= 1) return;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - start.x;
+        const dy = t.clientY - start.y;
+        // Only hijack the tap when it was clearly a horizontal swipe —
+        // otherwise let it navigate (tap) or scroll (vertical drag) as normal.
+        if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+          e.preventDefault();
+          changeIdx(idx + (dx < 0 ? 1 : -1));
+        }
+      }}
+      style={{
+        position: "relative",
+        display: "block",
+        aspectRatio: "298/400",
+        background: "var(--bg-deep)",
+        overflow: "hidden",
+        textDecoration: "none",
+        cursor: "pointer",
+        ...revealStyle(visible, (cardIndex % 3) * 60),
+      }}
+    >
+      {/* All of the card's photos are mounted together (not just the active
+          one) so flipping through them is instant — otherwise each swipe
+          would mount a fresh <Image> and the next photo would only start
+          downloading at that moment. Neighbours sit nudged a few px to the
+          side they'll enter/exit from, so switching reads as a soft slide
+          instead of a flat crossfade. */}
+      {images.map((src, i) => {
+        const nudge = i === idx ? 0 : i > idx ? 14 : -14;
+        return (
+          <Image
+            key={`${a.id}-${i}`}
+            src={src}
+            alt={a.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={cardIndex < 3 && i === 0}
+            style={{
+              objectFit: "cover",
+              opacity: i === idx ? 1 : 0,
+              transform: `translateX(${nudge}px) scale(${
+                i === idx && hovered ? 1.04 : 1
+              })`,
+              transition: "opacity .3s ease, transform .3s ease",
+            }}
+          />
+        );
+      })}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 120,
+          background: "linear-gradient(to top, rgba(7,7,7,0.85), transparent)",
+          pointerEvents: "none",
+        }}
+      />
+      {total > 1 && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            opacity: hovered || noHover ? 1 : 0,
+            transition: "opacity 0.2s",
+            pointerEvents: "none",
+          }}
+        >
+          <button onClick={(e) => setIdx(idx - 1, e)} style={arrowBtn}>
+            <span
+              style={{
+                display: "block",
+                width: 8,
+                height: 8,
+                borderLeft: "2px solid currentColor",
+                borderBottom: "2px solid currentColor",
+                transform: "rotate(45deg)",
+                marginLeft: 4,
+              }}
+            />
+          </button>
+          <button onClick={(e) => setIdx(idx + 1, e)} style={arrowBtn}>
+            <span
+              style={{
+                display: "block",
+                width: 8,
+                height: 8,
+                borderRight: "2px solid currentColor",
+                borderTop: "2px solid currentColor",
+                transform: "rotate(45deg)",
+                marginRight: 4,
+              }}
+            />
+          </button>
+        </div>
+      )}
+      <div style={{ position: "absolute", left: 16, bottom: 18, display: "flex", gap: 5 }}>
+        {Array.from({ length: total }, (_, i) => (
+          <span
+            key={i}
+            style={{
+              width: 5,
+              height: 5,
+              borderRadius: "50%",
+              background: i === idx ? "var(--accent)" : "rgba(238,233,219,0.4)",
+            }}
+          />
+        ))}
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          right: 14,
+          bottom: 16,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "6px 0",
+        }}
+      >
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: available ? "var(--available)" : "var(--sold)",
+          }}
+        />
+        <span
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontWeight: 500,
+            fontSize: 14,
+            lineHeight: 1,
+            color: available ? "var(--available)" : "var(--sold)",
+          }}
+        >
+          {available ? "Available" : "Sold"}
+        </span>
+      </div>
+    </Link>
   );
 }
 

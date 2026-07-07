@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Anton, M_PLUS_Code_Latin, Manrope } from "next/font/google";
+import PageTransition from "@/components/PageTransition";
 import "./globals.css";
 
 const bebas = Bebas_Neue({
@@ -41,7 +42,9 @@ export default function RootLayout({
       lang="en"
       className={`${bebas.variable} ${anton.variable} ${mplus.variable} ${manrope.variable}`}
     >
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <PageTransition>{children}</PageTransition>
+      </body>
     </html>
   );
 }

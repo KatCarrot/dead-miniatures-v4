@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useInView, revealStyle } from "@/lib/useInView";
 
 const SHOWCASE_CATS = [
   "SINGLE",
@@ -51,6 +52,20 @@ export default function HomeView({
   const formRef = useRef<HTMLFormElement | null>(null);
   const visualRef = useRef<HTMLDivElement | null>(null);
   const colRef = useRef<HTMLDivElement | null>(null);
+  const showcaseHeadingRef = useRef<HTMLDivElement | null>(null);
+  const showcaseTabsRef = useRef<HTMLDivElement | null>(null);
+  const showcasePhotosRef = useRef<HTMLDivElement | null>(null);
+  const quoteStackedRef = useRef<HTMLDivElement | null>(null);
+
+  // scroll-reveal: fade + rise once each block first enters the viewport
+  const showcaseHeadingVisible = useInView(showcaseHeadingRef);
+  const showcaseTabsVisible = useInView(showcaseTabsRef);
+  const showcasePhotosVisible = useInView(showcasePhotosRef);
+  const quoteVisible = useInView(quoteMeasureRef);
+  const quoteStackedVisible = useInView(quoteStackedRef);
+  const formVisible = useInView(formRef);
+  const visualVisible = useInView(visualRef);
+  const colVisible = useInView(colRef);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 900px)");
@@ -324,11 +339,13 @@ export default function HomeView({
           }}
         />
         <div
+          ref={showcaseHeadingRef}
           style={{
             display: "flex",
             flexDirection: "column",
             gap: 10,
             marginBottom: 48,
+            ...revealStyle(showcaseHeadingVisible),
           }}
         >
           <h2
@@ -368,6 +385,7 @@ export default function HomeView({
         >
           {/* vertical tab list */}
           <div
+            ref={showcaseTabsRef}
             style={{
               width: mobileLike
                 ? "100%"
@@ -376,6 +394,7 @@ export default function HomeView({
               height: mobileLike ? "auto" : 566,
               display: "flex",
               flexDirection: "column",
+              ...revealStyle(showcaseTabsVisible),
             }}
           >
             {SHOWCASE_CATS.map((k) => {
@@ -502,12 +521,14 @@ export default function HomeView({
           {/* right: overlapping rotated photos (desktop only, list not stacked) */}
           {!mobileLike && (
             <div
+              ref={showcasePhotosRef}
               style={{
                 position: "relative",
                 width: "clamp(420px, calc(420px + (100vw - 900px) * 1.628), 700px)",
                 minHeight: 606,
                 flexShrink: 0,
                 pointerEvents: "none",
+                ...revealStyle(showcasePhotosVisible, 100),
               }}
             >
               <div style={bigImg(img1, 60, 0, 401, 566)} />
@@ -550,6 +571,7 @@ export default function HomeView({
 
         {quoteStacked && (
           <div
+            ref={quoteStackedRef}
             style={{
               position: "relative",
               zIndex: 2,
@@ -560,6 +582,7 @@ export default function HomeView({
               flexDirection: "column",
               alignItems: "flex-start",
               gap: 28,
+              ...revealStyle(quoteStackedVisible),
             }}
           >
             <h2
@@ -678,8 +701,8 @@ export default function HomeView({
 
         <div
           ref={quoteMeasureRef}
-          style={
-            quoteStacked
+          style={{
+            ...(quoteStacked
               ? {
                   position: "absolute",
                   top: 0,
@@ -699,8 +722,9 @@ export default function HomeView({
                   maxWidth: 1416,
                   margin: "0 auto",
                   height: "clamp(540px,50vw,720px)",
-                }
-          }
+                }),
+            ...(quoteStacked ? {} : revealStyle(quoteVisible)),
+          }}
         >
           <h2
             style={{
@@ -884,6 +908,7 @@ export default function HomeView({
                 gap: 32,
                 padding: 40,
                 justifyContent: "center",
+                ...revealStyle(formVisible),
               }}
             >
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -987,6 +1012,7 @@ export default function HomeView({
                 justifyContent: "space-between",
                 gap: 24,
                 padding: 40,
+                ...revealStyle(visualVisible, 100),
               }}
             >
               <div
@@ -1064,8 +1090,8 @@ export default function HomeView({
             {/* contact cards */}
             <div
               ref={colRef}
-              style={
-                contactWrapped
+              style={{
+                ...(contactWrapped
                   ? {
                       display: "flex",
                       flexDirection: "column",
@@ -1083,13 +1109,14 @@ export default function HomeView({
                       minWidth: m ? undefined : 270,
                       flexGrow: m ? 0 : 1,
                       flexShrink: m ? 0 : 1,
-                    }
-              }
+                    }),
+                ...revealStyle(colVisible, 200),
+              }}
             >
               <div style={contactCard}>
                 <span style={contactKicker}>/ WRITE DIRECTLY</span>
                 <a
-                  href="mailto:deadminiatures@gmail.com"
+                  href="mailto:Deaddietrich@gmail.com"
                   style={{
                     fontFamily: "var(--font-sf)",
                     fontSize: 16,
@@ -1099,7 +1126,7 @@ export default function HomeView({
                     whiteSpace: "nowrap",
                   }}
                 >
-                  deadminiatures@gmail.com
+                  Deaddietrich@gmail.com
                 </a>
                 <div
                   style={contactIcon("/icons/mail.svg", -6, contactWrapped)}

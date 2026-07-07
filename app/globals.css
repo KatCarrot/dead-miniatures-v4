@@ -80,7 +80,15 @@ body {
 
 /* ============================================================================
    HOVER / INTERACTION HELPERS (cannot be expressed as inline styles)
+   Base rules carry the `transition` so hover states ease in/out instead of
+   snapping — the hover rules themselves only ever set end-state values.
    ============================================================================ */
+.nav-link {
+  transition: color 0.2s ease;
+}
+.nav-link span {
+  transition: border-color 0.2s ease;
+}
 .nav-link:hover,
 .nav-link-open {
   color: #1fe0c5 !important;
@@ -89,9 +97,15 @@ body {
 .nav-link-open span {
   border-color: #1fe0c5 !important;
 }
+.btn-text-link {
+  transition: text-decoration-color 0.2s ease;
+}
 .btn-text-link:hover {
   text-decoration: underline !important;
   text-underline-offset: 4px;
+}
+.btn-outline {
+  transition: background 0.2s ease, color 0.2s ease;
 }
 .btn-outline:hover {
   background: #1fe0c5 !important;
@@ -103,8 +117,14 @@ body {
   background: transparent !important;
   color: var(--accent) !important;
 }
+.contact-icon {
+  transition: background-color 0.2s ease;
+}
 .contact-link:hover .contact-icon {
   background-color: #1fe0c5 !important;
+}
+.contact-link span:first-child {
+  transition: text-decoration-color 0.2s ease;
 }
 .contact-link:hover span:first-child {
   text-decoration: underline;
@@ -112,6 +132,9 @@ body {
 }
 
 /* showcase + gallery */
+.tab-btn {
+  transition: color 0.2s ease;
+}
 .tab-btn:hover {
   color: #1fe0c5 !important;
 }
@@ -120,21 +143,39 @@ body {
 }
 
 /* product detail */
+.back-link {
+  transition: color 0.2s ease;
+}
 .back-link:hover {
   color: #eee9db !important;
+}
+.back-text {
+  transition: text-decoration-color 0.2s ease;
 }
 .back-link:hover .back-text {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+.prev-next-link {
+  transition: background 0.2s ease;
+}
 .prev-next-link:hover {
   background: rgba(255, 255, 255, 0.03) !important;
+}
+.media-thumb {
+  transition: opacity 0.2s ease;
 }
 .media-thumb:hover {
   opacity: 1 !important;
 }
+.media-arrow {
+  transition: background 0.2s ease;
+}
 .media-arrow:hover {
   background: rgba(5, 5, 5, 0.75) !important;
+}
+.lb-ctrl {
+  transition: background 0.2s ease;
 }
 .lb-ctrl:hover {
   background: rgba(255, 255, 255, 0.16) !important;
@@ -151,5 +192,18 @@ body {
 @media (max-width: 900px) {
   .deco-figure {
     display: none !important;
+  }
+}
+
+/* Respect the OS-level "reduce motion" setting across every transition,
+   animation and the smooth-scroll behavior declared above. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
