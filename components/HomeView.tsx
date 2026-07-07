@@ -21,24 +21,20 @@ const LABELS: Record<ShowcaseCat, string> = {
   BUSTS: "Busts",
   "SMALL SCALE": "Small Scale",
 };
-const COUNTS: Record<ShowcaseCat, number> = {
-  SINGLE: 23,
-  SQUAD: 3,
-  VEHICLE: 12,
-  DIORAMA: 6,
-  BUSTS: 4,
-  "SMALL SCALE": 12,
-};
 const IMAGES: Record<ShowcaseCat, [string, string]> = {
-  SINGLE: ["/samples/showcase-1.png", "/samples/showcase-2.png"],
-  SQUAD: ["/samples/mini-1.png", "/samples/mini-2.png"],
-  VEHICLE: ["/samples/mini-3.png", "/samples/vehicle.png"],
-  DIORAMA: ["/samples/mini-2.png", "/samples/mini-3.png"],
-  BUSTS: ["/samples/mini-1.png", "/samples/showcase-1.png"],
-  "SMALL SCALE": ["/samples/showcase-2.png", "/samples/mini-4.png"],
+  SINGLE: ["/samples/showcase-1.webp", "/samples/showcase-2.webp"],
+  SQUAD: ["/samples/mini-1.webp", "/samples/mini-2.webp"],
+  VEHICLE: ["/samples/mini-3.webp", "/samples/vehicle.webp"],
+  DIORAMA: ["/samples/mini-2.webp", "/samples/mini-3.webp"],
+  BUSTS: ["/samples/mini-1.webp", "/samples/showcase-1.webp"],
+  "SMALL SCALE": ["/samples/showcase-2.webp", "/samples/mini-4.webp"],
 };
 
-export default function HomeView() {
+export default function HomeView({
+  counts,
+}: {
+  counts: Record<ShowcaseCat, number>;
+}) {
   const [mobile, setMobile] = useState(false);
   const [ppCat, setPpCat] = useState<ShowcaseCat>("SINGLE");
   const [ppHover, setPpHover] = useState<ShowcaseCat | null>(null);
@@ -186,7 +182,7 @@ export default function HomeView() {
           marginTop: -headerH,
           paddingTop: headerH + (m ? 24 : 0),
           paddingBottom: m ? 0 : undefined,
-          backgroundImage: "url('/brand/hero-bg-opt.png')",
+          backgroundImage: "url('/brand/hero-bg-opt.webp')",
           backgroundSize: "cover",
           width: "100%",
           backgroundPosition: "top center",
@@ -204,7 +200,7 @@ export default function HomeView() {
                   width: "130%",
                   maxWidth: 760,
                   aspectRatio: "2115/1791",
-                  backgroundImage: "url('/brand/hero-logo-bg-opt.png')",
+                  backgroundImage: "url('/brand/hero-logo-bg-opt.webp')",
                   backgroundSize: "contain",
                   backgroundPosition: "center",
                   backgroundRepeat: "no-repeat",
@@ -216,7 +212,7 @@ export default function HomeView() {
                   top: -210,
                   width: 998,
                   height: 832,
-                  backgroundImage: "url('/brand/hero-logo-bg-opt.png')",
+                  backgroundImage: "url('/brand/hero-logo-bg-opt.webp')",
                   backgroundSize: "contain",
                   backgroundPosition: "left top",
                   backgroundRepeat: "no-repeat",
@@ -232,7 +228,7 @@ export default function HomeView() {
                   order: 2,
                   width: "100%",
                   aspectRatio: "860 / 767",
-                  backgroundImage: "url('/samples/hero-fig-opt.png')",
+                  backgroundImage: "url('/samples/hero-fig-opt.webp')",
                   backgroundSize: "contain",
                   backgroundPosition: "center bottom",
                   backgroundRepeat: "no-repeat",
@@ -245,7 +241,7 @@ export default function HomeView() {
                   bottom: 0,
                   width: 860,
                   height: 793,
-                  backgroundImage: "url('/samples/hero-fig-opt.png')",
+                  backgroundImage: "url('/samples/hero-fig-opt.webp')",
                   backgroundSize: "contain",
                   backgroundPosition: "right bottom",
                   backgroundRepeat: "no-repeat",
@@ -318,7 +314,7 @@ export default function HomeView() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: "url('/brand/scratch-tex-showcase.png')",
+            backgroundImage: "url('/brand/scratch-tex-showcase.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: 0.18,
@@ -434,7 +430,7 @@ export default function HomeView() {
                       }}
                     >
                       {LABELS[k].toUpperCase()}
-                      <span style={{ opacity: 0.4 }}> / {COUNTS[k]}</span>
+                      <span style={{ opacity: 0.4 }}> / {counts[k]}</span>
                     </span>
                     {isLit && (
                       <a
@@ -546,7 +542,7 @@ export default function HomeView() {
           style={{
             position: "absolute",
             inset: 0,
-            background: "url('/brand/quote-bg-opt.png') center/cover no-repeat",
+            background: "url('/brand/quote-bg-opt.webp') center/cover no-repeat",
             pointerEvents: "none",
             zIndex: 0,
           }}
@@ -586,7 +582,7 @@ export default function HomeView() {
                 width: "100%",
                 aspectRatio: "339/219",
                 overflow: "hidden",
-                background: "url('/samples/video-thumb.png') center/cover no-repeat",
+                background: "url('/samples/video-thumb.webp') center/cover no-repeat",
                 backgroundColor: "var(--card)",
               }}
             >
@@ -740,7 +736,7 @@ export default function HomeView() {
                 width: "clamp(280px,31vw,480px)",
                 aspectRatio: "339/219",
                 overflow: "hidden",
-                background: "url('/samples/video-thumb.png') center/cover no-repeat",
+                background: "url('/samples/video-thumb.webp') center/cover no-repeat",
                 backgroundColor: "var(--card)",
                 flexShrink: 0,
               }}
@@ -844,7 +840,7 @@ export default function HomeView() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: "url('/brand/scratch-tex-contact-new.png')",
+            backgroundImage: "url('/brand/scratch-tex-contact-new.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: 0.18,
@@ -998,7 +994,7 @@ export default function HomeView() {
                   position: "absolute",
                   inset: -24,
                   background:
-                    "url('/brand/logo-content-bg.png') center/contain no-repeat",
+                    "url('/brand/logo-content-bg.webp') center/contain no-repeat",
                   opacity: 0.9,
                   pointerEvents: "none",
                   zIndex: 0,

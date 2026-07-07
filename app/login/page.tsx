@@ -46,7 +46,7 @@ export default async function LoginPage({
             style={{
               width: 180,
               height: 64,
-              background: "url('/brand/dead-logo.png') left center/contain no-repeat",
+              background: "url('/brand/dead-logo.webp') left center/contain no-repeat",
             }}
           />
           <h1

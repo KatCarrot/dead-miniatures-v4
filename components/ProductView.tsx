@@ -1,15 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { imgSrc } from "@/lib/imgSrc";
 import type { Artwork } from "@/types/artwork";
 
 type NavItem = { id: number; name: string };
-
-function imgSrc(url: string | null): string {
-  if (!url) return "/samples/mini-1.png";
-  return url.replace(/^public\//, "/");
-}
 
 export default function ProductView({
   artwork,
@@ -135,7 +132,7 @@ export default function ProductView({
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: "url('/brand/scratch-tex.png')",
+          backgroundImage: "url('/brand/scratch-tex.webp')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           opacity: 0.18,
@@ -239,11 +236,6 @@ export default function ProductView({
                       i === idx
                         ? "2px solid var(--accent)"
                         : "2px solid transparent",
-                    backgroundImage: `url('${
-                      item.type === "video" ? imgSrc(artwork.image_url) : item.src
-                    }')`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
                     backgroundColor: "var(--bg-deep)",
                     cursor: "pointer",
                     padding: 0,
@@ -251,6 +243,13 @@ export default function ProductView({
                     transition: "opacity .2s",
                   }}
                 >
+                  <Image
+                    src={item.type === "video" ? imgSrc(artwork.image_url) : item.src}
+                    alt=""
+                    fill
+                    sizes="84px"
+                    style={{ objectFit: "cover" }}
+                  />
                   {item.type === "video" && (
                     <span
                       style={{
@@ -329,17 +328,24 @@ export default function ProductView({
                 <div
                   onClick={() => setLightbox(true)}
                   style={{
+                    position: "relative",
                     width: "100%",
                     height: m ? "auto" : "100%",
                     minHeight: m ? 280 : undefined,
                     aspectRatio: m ? "4 / 3" : undefined,
-                    backgroundImage: `url('${current.src}')`,
-                    backgroundSize: "contain",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
                     cursor: "zoom-in",
                   }}
-                />
+                >
+                  <Image
+                    key={current.src}
+                    src={current.src}
+                    alt={artwork.name}
+                    fill
+                    priority
+                    sizes="(max-width: 820px) 100vw, 70vw"
+                    style={{ objectFit: "contain" }}
+                  />
+                </div>
               )}
               {showNav && (
                 <>

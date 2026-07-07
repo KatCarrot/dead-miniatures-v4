@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { imgSrc } from "@/lib/imgSrc";
 import type { ArtworkCardData } from "@/types/artwork";
 
 const CATS = [
@@ -15,46 +16,37 @@ const CATS = [
   "SMALL SCALE",
 ] as const;
 
-const ALL_SAMPLES = [
-  "/samples/mini-1.png",
-  "/samples/mini-2.png",
-  "/samples/mini-3.png",
-  "/samples/mini-4.png",
-  "/samples/showcase-1.png",
-  "/samples/showcase-2.png",
-];
-
 const DECO_IMAGES: Record<string, string> = {
-  ALL: "/samples/all-xs.png",
-  SINGLE: "/samples/single-xs.png",
-  SQUAD: "/samples/single-xs.png",
-  VEHICLE: "/samples/vehicle-xs.png",
-  DIORAMA: "/samples/single-xs.png",
-  BUSTS: "/samples/busts-xs.png",
-  "SMALL SCALE": "/samples/small-scale-xs.png",
+  ALL: "/samples/all-xs.webp",
+  SINGLE: "/samples/single-xs.webp",
+  SQUAD: "/samples/single-xs.webp",
+  VEHICLE: "/samples/vehicle-xs.webp",
+  DIORAMA: "/samples/single-xs.webp",
+  BUSTS: "/samples/busts-xs.webp",
+  "SMALL SCALE": "/samples/small-scale-xs.webp",
 };
 
-function imgSrc(url: string | null): string {
-  if (!url) return "/samples/mini-1.png";
-  // DB may store the old DC-relative path; normalise to a public root path.
-  return url.replace(/^public\//, "/");
-}
-
-export default function GalleryView() {
+export default function GalleryView({
+  artworks,
+}: {
+  artworks: ArtworkCardData[];
+}) {
   const [cat, setCat] = useState<string>("ALL");
   const [cols, setCols] = useState(3);
   const [imgIndexes, setImgIndexes] = useState<Record<number, number>>({});
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-  const [artworks, setArtworks] = useState<ArtworkCardData[]>([]);
+  const [noHover, setNoHover] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  // fetch from Supabase
+  // touch/tablet devices never fire hover — keep the nav arrows visible there
+  // instead of hidden until a mouseenter that will never come.
   useEffect(() => {
-    supabase
-      .from("artworks")
-      .select("id,name,category,status,image_url,extra_images")
-      .order("id", { ascending: false })
-      .then(({ data }) => setArtworks(data ?? []));
+    const mq = window.matchMedia("(hover: none)");
+    const onMQ = () => setNoHover(mq.matches);
+    onMQ();
+    mq.addEventListener("change", onMQ);
+    return () => mq.removeEventListener("change", onMQ);
   }, []);
 
   // column detection
@@ -86,17 +78,34 @@ export default function GalleryView() {
     return () => window.removeEventListener("hashchange", apply);
   }, []);
 
-  const data = artworks.map((a) => ({
-    id: a.id,
-    name: a.name,
-    category: a.category,
-    status: a.status,
-    image: imgSrc(a.image_url),
-    extra: a.extra_images ? a.extra_images.length : 0,
-  }));
+  const data = useMemo(
+    () =>
+      artworks.map((a) => ({
+        id: a.id,
+        name: a.name,
+        category: a.category,
+        status: a.status,
+        images: [
+          imgSrc(a.image_url),
+          ...(a.extra_images ?? []).map(imgSrc),
+        ],
+      })),
+    [artworks]
+  );
 
-  const filtered = cat === "ALL" ? data : data.filter((a) => a.category === cat);
+  const filtered = useMemo(
+    () => (cat === "ALL" ? data : data.filter((a) => a.category === cat)),
+    [data, cat]
+  );
   const showDeco = cols >= 3;
+
+  const tabCounts = useMemo(() => {
+    const counts: Record<string, number> = { ALL: data.length };
+    for (const c of CATS) {
+      if (c !== "ALL") counts[c] = data.filter((a) => a.category === c).length;
+    }
+    return counts;
+  }, [data]);
 
   return (
     <div
@@ -114,7 +123,7 @@ export default function GalleryView() {
         style={{
           position: "fixed",
           inset: 0,
-          backgroundImage: "url('/brand/scratch-tex.png')",
+          backgroundImage: "url('/brand/scratch-tex.webp')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           opacity: 0.18,
@@ -179,6 +188,7 @@ export default function GalleryView() {
                 }}
               >
                 {c}
+                <span style={{ opacity: 0.4 }}> / {tabCounts[c]}</span>
               </button>
             );
           })}
@@ -214,7 +224,7 @@ export default function GalleryView() {
                   height: "130%",
                   width: "auto",
                   aspectRatio: "1/1",
-                  backgroundImage: `url('${DECO_IMAGES[cat] || "/samples/single-xs.png"}')`,
+                  backgroundImage: `url('${DECO_IMAGES[cat] || "/samples/single-xs.webp"}')`,
                   backgroundSize: "contain",
                   backgroundPosition: "left bottom",
                   backgroundRepeat: "no-repeat",
@@ -223,19 +233,20 @@ export default function GalleryView() {
             </div>
           )}
 
-          {filtered.map((a) => {
-            const total = Math.max(1, (a.extra || 0) + 1);
-            const images = Array.from({ length: total }, (_, i) =>
-              i === 0 ? a.image : ALL_SAMPLES[i % ALL_SAMPLES.length]
-            );
+          {filtered.map((a, cardIndex) => {
+            const images = a.images;
+            const total = images.length;
             const idx = imgIndexes[a.id] || 0;
             const n = total;
             const hovered = hoveredCard === a.id;
             const available = a.status === "available";
+            const changeIdx = (newIdx: number) => {
+              setImgIndexes((s) => ({ ...s, [a.id]: (newIdx + n) % n }));
+            };
             const setIdx = (newIdx: number, e: React.MouseEvent) => {
               e.preventDefault();
               e.stopPropagation();
-              setImgIndexes((s) => ({ ...s, [a.id]: (newIdx + n) % n }));
+              changeIdx(newIdx);
             };
             return (
               <Link
@@ -244,6 +255,25 @@ export default function GalleryView() {
                 className="gallery-card"
                 onMouseEnter={() => setHoveredCard(a.id)}
                 onMouseLeave={() => setHoveredCard(null)}
+                onTouchStart={(e) => {
+                  const t = e.touches[0];
+                  touchStartRef.current = { x: t.clientX, y: t.clientY };
+                }}
+                onTouchEnd={(e) => {
+                  const start = touchStartRef.current;
+                  touchStartRef.current = null;
+                  if (!start || total <= 1) return;
+                  const t = e.changedTouches[0];
+                  const dx = t.clientX - start.x;
+                  const dy = t.clientY - start.y;
+                  // Only hijack the tap when it was clearly a horizontal
+                  // swipe — otherwise let it navigate (tap) or scroll
+                  // (vertical drag) as normal.
+                  if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+                    e.preventDefault();
+                    changeIdx(dx < 0 ? idx + 1 : idx - 1);
+                  }
+                }}
                 style={{
                   position: "relative",
                   display: "block",
@@ -254,13 +284,15 @@ export default function GalleryView() {
                   cursor: "pointer",
                 }}
               >
-                <div
+                <Image
+                  key={images[idx]}
+                  src={images[idx]}
+                  alt={a.name}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  priority={cardIndex < 3}
                   style={{
-                    position: "absolute",
-                    inset: 0,
-                    backgroundImage: `url('${images[idx]}')`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
+                    objectFit: "cover",
                     transition: "transform .5s ease",
                     transform: hovered ? "scale(1.04)" : undefined,
                   }}
@@ -285,7 +317,7 @@ export default function GalleryView() {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      opacity: hovered ? 1 : 0,
+                      opacity: hovered || noHover ? 1 : 0,
                       transition: "opacity 0.2s",
                       pointerEvents: "none",
                     }}

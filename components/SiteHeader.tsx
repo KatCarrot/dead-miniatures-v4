@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HEADER_CATEGORIES } from "@/config/categories";
 
@@ -33,6 +34,7 @@ function menuItemStyle(color: string): React.CSSProperties {
 }
 
 export default function SiteHeader({ variant = "inner" }: Props) {
+  const pathname = usePathname();
   const [mobile, setMobile] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
@@ -84,6 +86,19 @@ export default function SiteHeader({ variant = "inner" }: Props) {
   const aboutHref = variant === "home" ? "#about" : "/#about";
   const contactsHref = variant === "home" ? "#contacts" : "/#contacts";
 
+  // Already on /showcase: Next's client-side Link nav updates the URL via
+  // history.pushState, which never fires "hashchange" — so GalleryView's tab
+  // state wouldn't update. Set location.hash directly instead; that always
+  // fires a real hashchange (no reload, no scroll — nothing has that id).
+  // Navigating in from another page still works, since GalleryView reads the
+  // hash straight off window.location on mount.
+  const categoryClick = (key: string) => (e: React.MouseEvent) => {
+    if (pathname === "/showcase") {
+      e.preventDefault();
+      window.location.hash = key;
+    }
+  };
+
   const barBase: React.CSSProperties = {
     position: "absolute",
     left: 12,
@@ -128,7 +143,6 @@ export default function SiteHeader({ variant = "inner" }: Props) {
             display: "flex",
             alignItems: "center",
             flexShrink: 0,
-            paddingBottom: 10,
           }}
         >
           <div
@@ -138,13 +152,13 @@ export default function SiteHeader({ variant = "inner" }: Props) {
                     width: 77,
                     height: 67,
                     background:
-                      "url('/brand/dead-logo.png') left center/contain no-repeat",
+                      "url('/brand/dead-logo.webp') left center/contain no-repeat",
                   }
                 : {
                     width: 111,
                     height: 100,
                     background:
-                      "url('/brand/dead-logo.png') left center/contain no-repeat",
+                      "url('/brand/dead-logo.webp') left center/contain no-repeat",
                   }
             }
           />
@@ -203,6 +217,7 @@ export default function SiteHeader({ variant = "inner" }: Props) {
                     <Link
                       key={c.key}
                       href={`/showcase#${c.key}`}
+                      onClick={categoryClick(c.key)}
                       className="nav-link"
                       style={{
                         display: "block",
@@ -317,7 +332,10 @@ export default function SiteHeader({ variant = "inner" }: Props) {
               <Link
                 key={c.key}
                 href={`/showcase#${c.key}`}
-                onClick={() => setMenuOpen(false)}
+                onClick={(e) => {
+                  setMenuOpen(false);
+                  categoryClick(c.key)(e);
+                }}
                 style={{
                   color: "var(--text-dim)",
                   textDecoration: "none",

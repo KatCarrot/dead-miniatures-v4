@@ -42,7 +42,7 @@ export default async function ManagePage() {
               width: 160,
               height: 56,
               background:
-                "url('/brand/dead-logo.png') left center/contain no-repeat",
+                "url('/brand/dead-logo.webp') left center/contain no-repeat",
             }}
           />
         </Link>
