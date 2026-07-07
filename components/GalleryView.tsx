@@ -307,9 +307,8 @@ function GalleryCard({
   onHoverLeave: () => void;
   onChangeIdx: (finalIdx: number) => void;
 }) {
-  const cardRef = useRef<HTMLAnchorElement | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const visible = useInView(cardRef as React.RefObject<Element | null>);
+  const [setCardRef, visible] = useInView();
 
   const images = a.images;
   const total = images.length;
@@ -326,7 +325,7 @@ function GalleryCard({
 
   return (
     <Link
-      ref={cardRef}
+      ref={setCardRef}
       href={`/artwork/${a.id}`}
       className="gallery-card"
       onMouseEnter={onHoverEnter}

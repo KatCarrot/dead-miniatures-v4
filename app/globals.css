@@ -130,6 +130,12 @@ body {
   text-decoration: underline;
   text-underline-offset: 5px;
 }
+.copy-email-btn {
+  transition: color 0.2s ease;
+}
+.copy-email-btn:hover {
+  color: #1fe0c5 !important;
+}
 
 /* showcase + gallery */
 .tab-btn {

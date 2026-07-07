@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useInView, revealStyle } from "@/lib/useInView";
 
+const CONTACT_EMAIL = "Deaddietrich@gmail.com";
+
 const SHOWCASE_CATS = [
   "SINGLE",
   "SQUAD",
@@ -40,6 +42,35 @@ export default function HomeView({
   const [ppCat, setPpCat] = useState<ShowcaseCat>("SINGLE");
   const [ppHover, setPpHover] = useState<ShowcaseCat | null>(null);
   const [emailVal, setEmailVal] = useState("");
+  const [emailCopied, setEmailCopied] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  async function copyEmail(e: React.MouseEvent) {
+    e.preventDefault();
+    try {
+      await navigator.clipboard.writeText(CONTACT_EMAIL);
+    } catch {
+      // Clipboard API unavailable (older browser / insecure context) —
+      // fall back to the classic hidden-textarea + execCommand trick.
+      const ta = document.createElement("textarea");
+      ta.value = CONTACT_EMAIL;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setEmailCopied(true);
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => setEmailCopied(false), 1600);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
 
   // responsive fallbacks — mirror Home.dc.html's truncation-based stacking
   const [showcaseStacked, setShowcaseStacked] = useState(false);
@@ -48,24 +79,23 @@ export default function HomeView({
   const [headerH, setHeaderH] = useState(84);
 
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  // These four are read for layout measurement, so they stay ref objects;
+  // the reveal callback ref is merged onto the same element inline below.
   const quoteMeasureRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const visualRef = useRef<HTMLDivElement | null>(null);
   const colRef = useRef<HTMLDivElement | null>(null);
-  const showcaseHeadingRef = useRef<HTMLDivElement | null>(null);
-  const showcaseTabsRef = useRef<HTMLDivElement | null>(null);
-  const showcasePhotosRef = useRef<HTMLDivElement | null>(null);
-  const quoteStackedRef = useRef<HTMLDivElement | null>(null);
 
-  // scroll-reveal: fade + rise once each block first enters the viewport
-  const showcaseHeadingVisible = useInView(showcaseHeadingRef);
-  const showcaseTabsVisible = useInView(showcaseTabsRef);
-  const showcasePhotosVisible = useInView(showcasePhotosRef);
-  const quoteVisible = useInView(quoteMeasureRef);
-  const quoteStackedVisible = useInView(quoteStackedRef);
-  const formVisible = useInView(formRef);
-  const visualVisible = useInView(visualRef);
-  const colVisible = useInView(colRef);
+  // scroll-reveal: fade + rise once each block first enters the viewport.
+  // Callback refs (setX) so conditionally-rendered blocks reveal correctly.
+  const [setShowcaseHeading, showcaseHeadingVisible] = useInView();
+  const [setShowcaseTabs, showcaseTabsVisible] = useInView();
+  const [setShowcasePhotos, showcasePhotosVisible] = useInView();
+  const [setQuoteReveal, quoteVisible] = useInView();
+  const [setQuoteStackedReveal, quoteStackedVisible] = useInView();
+  const [setFormReveal, formVisible] = useInView();
+  const [setVisualReveal, visualVisible] = useInView();
+  const [setColReveal, colVisible] = useInView();
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 900px)");
@@ -339,7 +369,7 @@ export default function HomeView({
           }}
         />
         <div
-          ref={showcaseHeadingRef}
+          ref={setShowcaseHeading}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -385,7 +415,7 @@ export default function HomeView({
         >
           {/* vertical tab list */}
           <div
-            ref={showcaseTabsRef}
+            ref={setShowcaseTabs}
             style={{
               width: mobileLike
                 ? "100%"
@@ -521,7 +551,7 @@ export default function HomeView({
           {/* right: overlapping rotated photos (desktop only, list not stacked) */}
           {!mobileLike && (
             <div
-              ref={showcasePhotosRef}
+              ref={setShowcasePhotos}
               style={{
                 position: "relative",
                 width: "clamp(420px, calc(420px + (100vw - 900px) * 1.628), 700px)",
@@ -553,9 +583,14 @@ export default function HomeView({
           position: "relative",
           zIndex: 1,
           overflow: "hidden",
+          // Match the SHOWCASE / CONTACTS sections: 180px top+bottom on every
+          // screen size. Flex-center the content vertically within the section.
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
           padding: m
-            ? "60px clamp(20px,6vw,40px) 80px"
-            : "80px clamp(20px,6vw,112px)",
+            ? "180px clamp(20px,6vw,40px)"
+            : "180px clamp(20px,6vw,112px)",
           isolation: "isolate",
         }}
       >
@@ -571,7 +606,7 @@ export default function HomeView({
 
         {quoteStacked && (
           <div
-            ref={quoteStackedRef}
+            ref={setQuoteStackedReveal}
             style={{
               position: "relative",
               zIndex: 2,
@@ -700,7 +735,10 @@ export default function HomeView({
         )}
 
         <div
-          ref={quoteMeasureRef}
+          ref={(el) => {
+            quoteMeasureRef.current = el;
+            setQuoteReveal(el);
+          }}
           style={{
             ...(quoteStacked
               ? {
@@ -895,7 +933,10 @@ export default function HomeView({
           >
             {/* form card */}
             <form
-              ref={formRef}
+              ref={(el) => {
+                formRef.current = el;
+                setFormReveal(el);
+              }}
               onSubmit={(e) => e.preventDefault()}
               style={{
                 position: "relative",
@@ -998,7 +1039,10 @@ export default function HomeView({
 
             {/* visual card */}
             <div
-              ref={visualRef}
+              ref={(el) => {
+                visualRef.current = el;
+                setVisualReveal(el);
+              }}
               style={{
                 position: "relative",
                 overflow: "hidden",
@@ -1089,7 +1133,10 @@ export default function HomeView({
 
             {/* contact cards */}
             <div
-              ref={colRef}
+              ref={(el) => {
+                colRef.current = el;
+                setColReveal(el);
+              }}
               style={{
                 ...(contactWrapped
                   ? {
@@ -1113,21 +1160,80 @@ export default function HomeView({
                 ...revealStyle(colVisible, 200),
               }}
             >
-              <div style={contactCard}>
+              <div className="contact-link" style={contactCard}>
                 <span style={contactKicker}>/ WRITE DIRECTLY</span>
-                <a
-                  href="mailto:Deaddietrich@gmail.com"
-                  style={{
-                    fontFamily: "var(--font-sf)",
-                    fontSize: 16,
-                    color: "var(--text)",
-                    textDecoration: "none",
-                    cursor: "default",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Deaddietrich@gmail.com
-                </a>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <a
+                    href={`mailto:${CONTACT_EMAIL}`}
+                    style={{
+                      fontFamily: "var(--font-sf)",
+                      fontSize: 16,
+                      color: "var(--text)",
+                      textDecoration: "none",
+                      cursor: "default",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {CONTACT_EMAIL}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={copyEmail}
+                    aria-label="Copy email address"
+                    className="copy-email-btn"
+                    style={{
+                      position: "relative",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 22,
+                      height: 22,
+                      padding: 0,
+                      flexShrink: 0,
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--text-dim)",
+                    }}
+                  >
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                    <span
+                      style={{
+                        position: "absolute",
+                        bottom: "calc(100% + 8px)",
+                        left: "50%",
+                        transform: emailCopied
+                          ? "translate(-50%, 0)"
+                          : "translate(-50%, 4px)",
+                        opacity: emailCopied ? 1 : 0,
+                        transition: "opacity .2s ease, transform .2s ease",
+                        background: "var(--accent)",
+                        color: "#0b0a0a",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 12,
+                        fontWeight: 500,
+                        lineHeight: 1,
+                        padding: "6px 9px",
+                        whiteSpace: "nowrap",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      Copied
+                    </span>
+                  </button>
+                </div>
                 <div
                   style={contactIcon("/icons/mail.svg", -6, contactWrapped)}
                   className="contact-icon"
