@@ -45,6 +45,40 @@ export default function HomeView({
   const [emailCopied, setEmailCopied] = useState(false);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [formStatus, setFormStatus] = useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
+  const [formError, setFormError] = useState("");
+
+  async function submitContactForm(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formEl = e.currentTarget;
+    setFormStatus("submitting");
+    setFormError("");
+    try {
+      const data = new FormData(formEl);
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: data.get("email"),
+          message: data.get("message"),
+          consent: data.get("consent") === "on",
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Something went wrong");
+      setFormStatus("success");
+      formEl.reset();
+      setEmailVal("");
+      setConsentChecked(false);
+    } catch (err) {
+      setFormStatus("error");
+      setFormError(err instanceof Error ? err.message : "Failed to send");
+    }
+  }
+
   async function copyEmail(e: React.MouseEvent) {
     e.preventDefault();
     try {
@@ -211,7 +245,8 @@ export default function HomeView({
   const cat = ppCat;
   const litCat = ppHover || cat;
   const [img1, img2] = IMAGES[litCat];
-  const sendDisabled = !emailVal.trim();
+  const sendDisabled =
+    !emailVal.trim() || !consentChecked || formStatus === "submitting";
   const mobileLike = m || showcaseStacked;
 
   return (
@@ -937,7 +972,7 @@ export default function HomeView({
                 formRef.current = el;
                 setFormReveal(el);
               }}
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={submitContactForm}
               style={{
                 position: "relative",
                 width: m ? "100%" : "clamp(450px, calc(450px + (100vw - 900px) * 0.911), 501px)",
@@ -984,6 +1019,7 @@ export default function HomeView({
                 >
                   <input
                     type="email"
+                    name="email"
                     required
                     placeholder="E-mail"
                     onChange={(e) => setEmailVal(e.target.value)}
@@ -999,6 +1035,8 @@ export default function HomeView({
                     }}
                   />
                   <textarea
+                    name="message"
+                    required
                     placeholder="Tell about your project"
                     rows={3}
                     style={{
@@ -1014,26 +1052,91 @@ export default function HomeView({
                     }}
                   />
                 </div>
-                <button
-                  type="submit"
-                  className="btn-outline"
-                  disabled={sendDisabled}
+                <label
                   style={{
-                    width: 171,
-                    height: 40,
-                    boxShadow: "inset 0 0 0 1px var(--accent)",
-                    background: "transparent",
-                    color: "var(--accent)",
-                    fontFamily: "var(--font-mono)",
-                    fontWeight: 500,
-                    fontSize: 16,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10,
                     cursor: "pointer",
-                    textTransform: "uppercase",
-                    transition: "opacity 0.2s",
                   }}
                 >
-                  Send
-                </button>
+                  <input
+                    type="checkbox"
+                    name="consent"
+                    checked={consentChecked}
+                    onChange={(e) => setConsentChecked(e.target.checked)}
+                    style={{
+                      marginTop: 3,
+                      width: 15,
+                      height: 15,
+                      flexShrink: 0,
+                      accentColor: "var(--accent)",
+                      cursor: "pointer",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontFamily: "var(--font-sf)",
+                      fontSize: 13,
+                      lineHeight: 1.4,
+                      color: "var(--text-dim)",
+                    }}
+                  >
+                    I agree to the{" "}
+                    <Link
+                      href="/privacy"
+                      style={{ color: "var(--accent)", textDecoration: "underline" }}
+                    >
+                      Privacy Policy
+                    </Link>{" "}
+                    and consent to my message being processed to reply to this
+                    enquiry.
+                  </span>
+                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <button
+                    type="submit"
+                    className="btn-outline"
+                    disabled={sendDisabled}
+                    style={{
+                      width: 171,
+                      height: 40,
+                      boxShadow: "inset 0 0 0 1px var(--accent)",
+                      background: "transparent",
+                      color: "var(--accent)",
+                      fontFamily: "var(--font-mono)",
+                      fontWeight: 500,
+                      fontSize: 16,
+                      cursor: "pointer",
+                      textTransform: "uppercase",
+                      transition: "opacity 0.2s",
+                    }}
+                  >
+                    {formStatus === "submitting" ? "Sending…" : "Send"}
+                  </button>
+                  {formStatus === "success" && (
+                    <span
+                      style={{
+                        fontFamily: "var(--font-sf)",
+                        fontSize: 13,
+                        color: "var(--accent)",
+                      }}
+                    >
+                      Message sent — thank you!
+                    </span>
+                  )}
+                  {formStatus === "error" && (
+                    <span
+                      style={{
+                        fontFamily: "var(--font-sf)",
+                        fontSize: 13,
+                        color: "#ff6b6b",
+                      }}
+                    >
+                      {formError}
+                    </span>
+                  )}
+                </div>
               </div>
             </form>
 
