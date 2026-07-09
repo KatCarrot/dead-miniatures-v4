@@ -83,6 +83,16 @@ export default function SiteHeader({ variant = "inner" }: Props) {
     });
   };
 
+  // On the home page, clicking the logo from anywhere scrolled down smooth-
+  // scrolls back up to the hero instead of a (no-op, since we're already on
+  // "/") navigation. On other pages it's a normal Link back to "/".
+  const logoClick = (e: React.MouseEvent) => {
+    setMenuOpen(false);
+    if (variant !== "home") return;
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const aboutHref = variant === "home" ? "#about" : "/#about";
   const contactsHref = variant === "home" ? "#contacts" : "/#contacts";
 
@@ -139,6 +149,7 @@ export default function SiteHeader({ variant = "inner" }: Props) {
       >
         <Link
           href="/"
+          onClick={logoClick}
           style={{
             display: "flex",
             alignItems: "center",

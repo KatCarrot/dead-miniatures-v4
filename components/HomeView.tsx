@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useInView, revealStyle } from "@/lib/useInView";
@@ -262,13 +263,23 @@ export default function HomeView({
           marginTop: -headerH,
           paddingTop: headerH + (m ? 24 : 0),
           paddingBottom: m ? 0 : undefined,
-          backgroundImage: "url('/brand/hero-bg-opt.webp')",
-          backgroundSize: "cover",
           width: "100%",
-          backgroundPosition: "top center",
-          backgroundRepeat: "no-repeat",
         }}
       >
+        {/* Full-bleed hero photo — next/image gives this a responsive
+            srcset (mobile no longer downloads the desktop-width source) plus
+            automatic AVIF/WebP negotiation and a correctly-sized preload via
+            `priority`, instead of the old fixed-size CSS background. */}
+        <Image
+          src="/brand/hero-bg-opt.webp"
+          alt=""
+          aria-hidden
+          fill
+          priority
+          quality={90}
+          sizes="100vw"
+          style={{ objectFit: "cover", objectPosition: "top center", zIndex: 0 }}
+        />
         <div
           style={
             m
@@ -280,10 +291,6 @@ export default function HomeView({
                   width: "130%",
                   maxWidth: 760,
                   aspectRatio: "2115/1791",
-                  backgroundImage: "url('/brand/hero-logo-bg-opt.webp')",
-                  backgroundSize: "contain",
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat",
                   pointerEvents: "none",
                 }
               : {
@@ -292,14 +299,21 @@ export default function HomeView({
                   top: -210,
                   width: 998,
                   height: 832,
-                  backgroundImage: "url('/brand/hero-logo-bg-opt.webp')",
-                  backgroundSize: "contain",
-                  backgroundPosition: "left top",
-                  backgroundRepeat: "no-repeat",
                   pointerEvents: "none",
                 }
           }
-        />
+        >
+          <Image
+            src="/brand/hero-logo-bg-opt.webp"
+            alt=""
+            aria-hidden
+            fill
+            priority
+            quality={90}
+            sizes={m ? "130vw" : "998px"}
+            style={{ objectFit: "contain", objectPosition: m ? "center" : "left top" }}
+          />
+        </div>
         <div
           style={
             m
@@ -308,10 +322,6 @@ export default function HomeView({
                   order: 2,
                   width: "100%",
                   aspectRatio: "860 / 767",
-                  backgroundImage: "url('/samples/hero-fig-opt.webp')",
-                  backgroundSize: "contain",
-                  backgroundPosition: "center bottom",
-                  backgroundRepeat: "no-repeat",
                   zIndex: 1,
                   pointerEvents: "none",
                 }
@@ -321,15 +331,22 @@ export default function HomeView({
                   bottom: 0,
                   width: 860,
                   height: 793,
-                  backgroundImage: "url('/samples/hero-fig-opt.webp')",
-                  backgroundSize: "contain",
-                  backgroundPosition: "right bottom",
-                  backgroundRepeat: "no-repeat",
                   zIndex: 2,
                   pointerEvents: "none",
                 }
           }
-        />
+        >
+          <Image
+            src="/samples/hero-fig-opt.webp"
+            alt=""
+            aria-hidden
+            fill
+            priority
+            quality={90}
+            sizes={m ? "100vw" : "860px"}
+            style={{ objectFit: "contain", objectPosition: m ? "center bottom" : "right bottom" }}
+          />
+        </div>
         <div
           style={{
             position: m ? "relative" : "absolute",
@@ -729,8 +746,8 @@ export default function HomeView({
                 color: "var(--accent)",
               }}
             >
-              / Kisa
-              <br />/ Miniature artist
+              / Ilya DeadMiniatures
+              <br />/ text should be here
             </div>
 
             <div
@@ -892,8 +909,8 @@ export default function HomeView({
                 marginLeft: -50,
               }}
             >
-              / Kisa
-              <br />/ Miniature artist
+              / Ilya DeadMiniatures
+              <br />/ text should be here
             </div>
           </div>
 

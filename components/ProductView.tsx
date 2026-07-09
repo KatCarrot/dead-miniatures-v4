@@ -334,8 +334,54 @@ export default function ProductView({
                     minHeight: m ? 280 : undefined,
                     aspectRatio: m ? "4 / 3" : undefined,
                     cursor: "zoom-in",
+                    overflow: "hidden",
                   }}
                 >
+                  {/* Blurred, scaled-up copy of the same photo fills the box
+                      behind the full (uncropped) image — so a piece whose
+                      photo aspect ratio doesn't match this frame gets a soft
+                      backdrop instead of empty bars, and nothing is cropped.
+                      Most pieces here are shot on a flat black backdrop, so
+                      the blurred copy alone often has nothing to show at the
+                      edges (blurred black is still just black) — the vignette
+                      + grain layers below keep the frame from reading as an
+                      empty rectangle even then. */}
+                  <Image
+                    key={`${current.src}-bg`}
+                    src={current.src}
+                    alt=""
+                    aria-hidden
+                    fill
+                    sizes="(max-width: 820px) 100vw, 70vw"
+                    style={{
+                      objectFit: "cover",
+                      filter: "blur(40px) brightness(0.45) saturate(1.1)",
+                      transform: "scale(1.15)",
+                    }}
+                  />
+                  <div
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background:
+                        "radial-gradient(ellipse at center, rgba(238,233,219,0.05), rgba(0,0,0,0.35) 75%)",
+                      pointerEvents: "none",
+                    }}
+                  />
+                  <div
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      backgroundImage: "url('/brand/scratch-tex.webp')",
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      opacity: 0.15,
+                      mixBlendMode: "color-dodge",
+                      pointerEvents: "none",
+                    }}
+                  />
                   <Image
                     key={current.src}
                     src={current.src}
@@ -343,7 +389,7 @@ export default function ProductView({
                     fill
                     priority
                     sizes="(max-width: 820px) 100vw, 70vw"
-                    style={{ objectFit: "contain" }}
+                    style={{ objectFit: "contain", zIndex: 1 }}
                   />
                 </div>
               )}
@@ -548,10 +594,41 @@ export default function ProductView({
             alignItems: "center",
             justifyContent: "center",
             padding: 40,
+            overflow: "hidden",
           }}
         >
+          {/* Same blurred-backdrop treatment as the main viewer, so an
+              off-ratio photo doesn't show empty bars at fullscreen either.
+              Blurred black-backdrop photos still contribute nothing on their
+              own — the grain layer keeps the dimmed surround from reading as
+              a flat, empty overlay. */}
           <div
             style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `url('${current.src}')`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              filter: "blur(50px) brightness(0.35) saturate(1.1)",
+              transform: "scale(1.15)",
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: "url('/brand/scratch-tex.webp')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: 0.12,
+              mixBlendMode: "color-dodge",
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            style={{
+              position: "relative",
               maxWidth: "92vw",
               maxHeight: "88vh",
               width: "100%",

@@ -4,6 +4,11 @@ import SiteFooter from "@/components/SiteFooter";
 import ProductView from "@/components/ProductView";
 import { getArtwork, getArtworks } from "@/lib/queries";
 
+// Without this, Next treats the route as static (no dynamic APIs used) and
+// caches each piece's HTML at build time, so status changes (e.g. sold) and
+// newly added pieces never show up until a rebuild.
+export const dynamic = "force-dynamic";
+
 /**
  * Single artwork detail — route "/artwork/[id]".
  * Server-fetches the piece + the ordered list (for prev/next), then hands off
