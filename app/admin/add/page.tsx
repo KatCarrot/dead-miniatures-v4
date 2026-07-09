@@ -1,22 +1,16 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth, isAdminSession, signOut } from "@/auth";
-import { getArtworks } from "@/lib/queries";
-import ManageList from "./ManageList";
+import AdminForm from "./AdminForm";
 
 /**
- * /admin/manage — list every piece with inline quick-edit (name/category/
- * status) and delete. Server-guarded like /admin: middleware blocks
+ * /admin/add — new-artwork form. Server-guarded: middleware blocks
  * non-admins, and we re-check here so the page never renders for a stray
- * session. The list itself is a public-read query (same as /showcase); only
- * the PATCH/DELETE calls it makes are admin-gated (see
- * app/api/artworks/[id]/route.ts).
+ * session.
  */
-export default async function ManagePage() {
+export default async function AdminAddPage() {
   const session = await auth();
   if (!isAdminSession(session)) redirect("/login");
-
-  const artworks = await getArtworks();
 
   return (
     <main
@@ -47,9 +41,6 @@ export default async function ManagePage() {
           />
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <span style={{ fontSize: 14, color: "var(--text-dim)" }}>
-            {session?.user?.email}
-          </span>
           <form
             action={async () => {
               "use server";
@@ -78,51 +69,52 @@ export default async function ManagePage() {
 
       <div
         style={{
-          maxWidth: 960,
+          maxWidth: 760,
           margin: "0 auto",
           padding: "48px clamp(20px,5vw,64px) 120px",
         }}
       >
-        <div
+        <Link
+          href="/admin"
+          className="back-link"
           style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 16,
-            marginBottom: 8,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            color: "var(--text)",
+            textDecoration: "none",
+            fontFamily: "var(--font-sf)",
+            fontWeight: 400,
+            fontSize: 16,
+            marginBottom: 28,
           }}
         >
-          <h1
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 400,
-              fontSize: "clamp(40px,6vw,60px)",
-              lineHeight: 0.95,
-              margin: 0,
-              textTransform: "uppercase",
-            }}
-          >
-            Manage pieces
-          </h1>
-          <Link
-            href="/admin"
-            style={{
-              fontSize: 14,
-              color: "var(--accent)",
-              textDecoration: "none",
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-            }}
-          >
-            + Add a piece
-          </Link>
-        </div>
-        <p style={{ margin: "0 0 32px", fontSize: 16, color: "var(--text-dim)" }}>
-          Edit name, category, and status inline, or remove a piece entirely.
-        </p>
+          <span style={{ fontSize: 18, lineHeight: 1 }}>&#8592;</span>
+          <span className="back-text">Back to manage pieces</span>
+        </Link>
 
-        <ManageList initial={artworks} />
+        <h1
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 400,
+            fontSize: "clamp(48px,7vw,72px)",
+            lineHeight: 0.95,
+            margin: "0 0 8px",
+            textTransform: "uppercase",
+          }}
+        >
+          Add a piece
+        </h1>
+        <p
+          style={{
+            margin: "0 0 40px",
+            fontSize: 16,
+            color: "var(--text-dim)",
+          }}
+        >
+          Fill the form and publish — it goes straight into the live showcase.
+        </p>
+        <AdminForm />
       </div>
     </main>
   );

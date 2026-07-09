@@ -17,7 +17,8 @@ npm run dev                         # http://localhost:3000
 | `/showcase`      | `app/showcase/page.tsx`       | Gallery. Client-fetches `artworks`; category tabs + deco art. |
 | `/artwork/[id]`  | `app/artwork/[id]/page.tsx`   | Product. Media viewer, thumbnails, lightbox, prev/next.      |
 | `/login`         | `app/login/page.tsx`          | Google sign-in for the admin.                                |
-| `/admin`         | `app/admin/page.tsx`          | Add-a-piece form. Guarded — allowlisted Google account only. |
+| `/admin`         | `app/admin/page.tsx`          | Manage pieces — admin home. Guarded — allowlisted Google account only. |
+| `/admin/add`     | `app/admin/add/page.tsx`      | Add-a-piece form. Guarded — allowlisted Google account only. |
 
 Logo + "Home" → `/`. Header **MINIATURES** → `/showcase`.
 
@@ -31,8 +32,10 @@ app/
   showcase/page.tsx      /showcase
   artwork/[id]/page.tsx  /artwork/[id]
   login/page.tsx         /login  — Google sign-in (admin)
-  admin/page.tsx         /admin  — new-artwork form (guarded)
-  admin/AdminForm.tsx    the form UI (client)
+  admin/page.tsx         /admin  — manage pieces, admin home (guarded)
+  admin/ManageList.tsx   the manage-pieces list UI (client)
+  admin/add/page.tsx     /admin/add — new-artwork form (guarded)
+  admin/add/AdminForm.tsx  the form UI (client)
   api/auth/[...nextauth]/route.ts   Auth.js handlers
   api/artworks/route.ts  POST — session-guarded insert (images/video already uploaded to Storage)
   api/artworks/upload-url/route.ts        POST — signed upload URL for cover/extra images
@@ -190,7 +193,7 @@ showcase immediately.
 
 4. **Sign in at `/login`** with any Google account, then hit `GET /api/whoami`
    to read your account's `sub`. Paste it into `ADMIN_GOOGLE_SUBS` (restart
-   the dev server / redeploy), then go to `/admin` → fill the form →
+   the dev server / redeploy), then go to `/admin/add` → fill the form →
    *Publish piece*. Add more admins later by extending `ADMIN_GOOGLE_SUBS`
    (comma-separated), no code change needed.
 
